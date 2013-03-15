@@ -33,6 +33,7 @@ import javax.swing.JPanel;
 import javax.swing.border.LineBorder;
 import java.awt.GridLayout;
 import javax.swing.JTable;
+import javax.swing.ScrollPaneConstants;
 
 
 public class ChatWindowClient {
@@ -54,11 +55,12 @@ public class ChatWindowClient {
 	public JButton btnCustom = new JButton("\u6A5F\u5668\u4EBA");
 	public JButton btnTransfer = new JButton("\u50B3\u9001\u6A94\u6848");
 	public JButton btnVoice = new JButton("\u8A9E\u97F3\u901A\u8A71");
-	private final JPanel panel = new JPanel();
-	private final JButton btnNewButton = new JButton("New button");
-	private final JButton btnNewButton_1 = new JButton("New button");
-	private final JButton btnNewButton_2 = new JButton("New button");
-	private final JButton btnNewButton_3 = new JButton("New button");;
+	private final JPanel emoticonTable = new JPanel();
+	private final JButton emo1 = new JButton("");
+	private final JButton emo2 = new JButton("");
+	private final JButton emo3 = new JButton("");
+	private final JButton emo4 = new JButton("");
+	private final JScrollPane emoticonScroll = new JScrollPane();;
 	/**
 	 * Launch the application.
 	 */
@@ -92,17 +94,29 @@ public class ChatWindowClient {
 		frmLabChatroom.setBounds(100, 100, 929, 632);
 		frmLabChatroom.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		frmLabChatroom.getContentPane().setLayout(null);
-		panel.setBounds(0, 0, 100, 100);
+		emoticonScroll.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
+		emoticonScroll.setBounds(450, 410, 100, 100);
 		
-		frmLabChatroom.getContentPane().add(panel);
-		panel.setLayout(new GridLayout(1, 0, 0, 0));
-		panel.add(btnNewButton);
+		frmLabChatroom.getContentPane().add(emoticonScroll);
+		emoticonScroll.setViewportView(emoticonTable);
+		emoticonTable.setLayout(null);
 		
-		panel.add(btnNewButton_1);
+		emo1.addMouseListener(emoMouseListener("{:D}"));
+		emo2.addMouseListener(emoMouseListener("{:)}"));
+		emo3.addMouseListener(emoMouseListener("{:(}"));
+		emo4.addMouseListener(emoMouseListener("{:D}"));
+				
+		emo1.setBounds(0, 0, 25, 25);
+		emo2.setBounds(25, 0, 25, 25);
+		emo3.setBounds(50, 0, 25, 25);
+		emo4.setBounds(75, 0, 25, 25);
 		
-		panel.add(btnNewButton_2);
+		emoticonTable.add(emo1);
+		emoticonTable.add(emo2);				
+		emoticonTable.add(emo3);				
+		emoticonTable.add(emo4);
 		
-		panel.add(btnNewButton_3);
+		emoticonScroll.setVisible(false);
 		
 		JLabel label = new JLabel("\u4F7F\u7528\u8005\u5217\u8868");
 		label.setBounds(10, 10, 152, 25);
@@ -117,6 +131,7 @@ public class ChatWindowClient {
 				username = textUsername.getText();
 				textUsername.setEditable(false);
 				new Thread(listener = new Listener(myCWC)).start();
+			    textChat.requestFocus();
 			}
 		});
 		
@@ -127,6 +142,12 @@ public class ChatWindowClient {
 		frmLabChatroom.getContentPane().add(btnWhisper);
 		btnChatroom.setBounds(335, 525, 104, 23);
 		frmLabChatroom.getContentPane().add(btnChatroom);
+		btnEmoticon.addMouseListener(new MouseAdapter() {
+			@Override
+			public void mousePressed(MouseEvent e) {				
+				emoticonScroll.setVisible(!emoticonScroll.isVisible());
+			}
+		});
 		btnEmoticon.setBounds(449, 525, 104, 23);
 		frmLabChatroom.getContentPane().add(btnEmoticon);						
 		btnCustom.setBounds(563, 525, 104, 23);
@@ -140,9 +161,7 @@ public class ChatWindowClient {
 		textUsername.setBounds(10, 558, 152, 26);
 		frmLabChatroom.getContentPane().add(textUsername);
 		textUsername.setColumns(10);
-		textChat.setBounds(172, 560, 731, 24);
-		
-		
+		textChat.setBounds(172, 560, 731, 24);				
 		textChat.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {			
 				try
@@ -156,14 +175,24 @@ public class ChatWindowClient {
 				textChat.setText(null);				
 			}
 		});
-		frmLabChatroom.getContentPane().add(textChat);
-		textChat.setColumns(10);
+		frmLabChatroom.getContentPane().add(textChat);		
 		userList.setBounds(10, 45, 152, 470);
 		frmLabChatroom.getContentPane().add(userList);
 		textPane.setBounds(172, 10, 731, 505);
 	    textScroll.setBounds(172, 10, 731, 505);
 	    frmLabChatroom.getContentPane().add(textScroll);
 	    textScroll.setViewportView(textPane);	    	    
-	    
+	}
+	
+	public MouseAdapter emoMouseListener(final String s){
+		MouseAdapter ma = new MouseAdapter() {
+			@Override
+			public void mousePressed(MouseEvent arg0) {
+				textChat.setText(textChat.getText()+s);
+				emoticonScroll.setVisible(false);
+				textChat.requestFocus();
+			};
+		}; 
+		return ma;
 	}
 }

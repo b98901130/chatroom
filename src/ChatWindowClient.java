@@ -92,7 +92,7 @@ public class ChatWindowClient {
 		frmLabChatroom.setBounds(100, 100, 929, 632);
 		frmLabChatroom.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		frmLabChatroom.getContentPane().setLayout(null);
-		panel.setBounds(0, 0, 10, 10);
+		panel.setBounds(0, 0, 100, 100);
 		
 		frmLabChatroom.getContentPane().add(panel);
 		panel.setLayout(new GridLayout(1, 0, 0, 0));

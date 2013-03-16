@@ -97,14 +97,11 @@ class ServerThread extends Thread implements Runnable
 				String message = in.readUTF();
 
 				// for normal Text, broadcast it to everyone in this room
-				synchronized (ht_room) {
-					for(Enumeration<DataOutputStream> e = ht_room.elements(); e.hasMoreElements();) {
-						DataOutputStream out = (DataOutputStream)e.nextElement();
-						try {
+				if (!isSpecialMsg(message, socket)) {
+					synchronized (ht_room) {
+						for(Enumeration<DataOutputStream> e = ht_room.elements(); e.hasMoreElements();) {
+							DataOutputStream out = (DataOutputStream)e.nextElement();
 							out.writeUTF(message);
-						}
-						catch (IOException ex) {
-							ex.printStackTrace();
 						}
 					}
 				}
@@ -139,12 +136,35 @@ class ServerThread extends Thread implements Runnable
 			}
 		}
 	}
+	
+	private boolean isSpecialMsg(String msg, Socket socket) throws IOException {
+		String header = msg.substring(0, msg.indexOf(")") + 1), username, ip;
+		DataOutputStream out;
+		
+		switch (header) {
+		case "(IPRequest)":
+			username = msg.substring(msg.indexOf(")") + 1);
+			ip = ht_user.get(username).getIp();
+			out = new DataOutputStream(socket.getOutputStream());
+			out.writeUTF("(IPReply)" + username + '%' + ip);
+			return true;
+		case "(FileRequest)":
+			// 4. server->receiver: (FileRequest)
+			username = msg.substring(msg.indexOf(")") + 1);
+			out = new DataOutputStream(ht_user.get(username).getSocket().getOutputStream());
+			out.writeUTF("(FileRequest)");
+			return true;
+		}
+		
+		return false;
+	}
+	
 }
 
 class UserData {
-	String name;
-	String ip;
-	Socket socket;
+	private String name;
+	private String ip;
+	private Socket socket;
 	
 	public UserData(String n, String i, Socket s)
 	{
@@ -153,8 +173,7 @@ class UserData {
 		socket = s;
 	}
 	
-	public String getName()
-	{
-		return name;
-	}
+	public String getName()	{ return name; }
+	public String getIp() {	return ip; }
+	public Socket getSocket() {	return socket; }
 }

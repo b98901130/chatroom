@@ -1,4 +1,6 @@
 import java.awt.EventQueue;
+import java.io.IOException;
+
 import javax.swing.JFrame;
 import java.util.Vector;
 import javax.swing.JTabbedPane;
@@ -52,8 +54,18 @@ public class ChatWindowClient {
 		
 	}
 	
-	public void createNewRoom() {
+	public void sentNewRoomReq() {
 		tabs.add(new ChatTabClient(this));
-		tabbedPane.addTab("Room", null, tabs.get(tabs.size()-1).tabPanel, null);
+		tabs.get(tabs.size()-1).autoConnect(-1, tabs.get(0).username);
+		try {
+			tabs.get(tabs.size()-1).listener.out.writeUTF("(OpenRoomRequest%"+tabs.get(tabs.size()-1).listener.user+")");
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
+	
+	public void createNewRoom() {		
+		tabbedPane.addTab("Room", null, tabs.get(tabs.size()-1).tabPanel, null);		
 	}
 }

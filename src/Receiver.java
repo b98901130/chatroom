@@ -1,3 +1,4 @@
+import java.awt.FileDialog;
 import java.io.BufferedOutputStream;
 import java.io.DataInputStream;
 import java.io.FileOutputStream;
@@ -5,8 +6,14 @@ import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
 
-public class Receiver {
-	public Receiver(String[] argv) throws IOException {
+import javax.swing.JTextPane;
+
+public class Receiver extends Thread implements Runnable {
+	private ServerSocket servsock;
+	private FileDialog fileDialog;
+	private JTextPane textPane;
+	
+	public Receiver(FileDialog fd, JTextPane t) throws IOException {
 		/* [File transfer protocol]
 		 * 1. transmitter->server: (IPRequest)username
 		 * 2. server->transmitter: (IPReply)IpOfReceiver
@@ -15,28 +22,49 @@ public class Receiver {
 		 * 5. transmitter->receiver: (FileInfo)filename%fileSize%
 		 * 6. transmitter->receiver: file content
 		 */
-		ServerSocket servsock = new ServerSocket(25535);
-	    
-		// 4. after server->receiver: (FileRequest)
-		Socket socket = servsock.accept();
+		servsock = new ServerSocket(25535);
+		fileDialog = fd;
+		textPane = t;
+	}
+	
+	public void run() {
+		String filePath = "", fileName = "";
 		
-		// 5. after connection is opened, transmitter should then send "(FileInfo)filename%fileSize%" to receiver
-		DataInputStream inputStream = new DataInputStream(socket.getInputStream());
-		String fileInfo = inputStream.readUTF(), fileName;
-		int fileSize;
-		if (fileInfo.startsWith("(FileInfo)")) {
-			fileName = fileInfo.substring(fileInfo.indexOf(')') + 1, fileInfo.indexOf('%'));
-			fileSize = Integer.parseInt(fileInfo.substring(fileInfo.indexOf('%') + 1, fileInfo.lastIndexOf('%')));
-		}
-		else {
+		try {
+			// 4. after server->receiver: (FileRequest)
+			Socket socket = servsock.accept();
+			DataInputStream inStream = new DataInputStream(socket.getInputStream());
+			
+			// load file name from fileDialog
+            fileDialog.setVisible(true);
+			filePath = fileDialog.getDirectory();
+			fileName = fileDialog.getFile();
+
+			// 5. after connection is opened, transmitter should then send "(FileInfo)filename%fileSize%" to receiver
+			String fileInfo = inStream.readUTF();
+			int fileSize;
+			if (fileInfo.startsWith("(FileInfo)")) {
+				if (fileName.isEmpty())
+					fileName = fileInfo.substring(fileInfo.indexOf(')') + 1, fileInfo.indexOf('%'));
+				fileSize = Integer.parseInt(fileInfo.substring(fileInfo.indexOf('%') + 1, fileInfo.lastIndexOf('%')));
+			}
+			else {
+				servsock.close();
+				throw new IOException("FileInfo error!");
+			}
+
+			// 6. after file information is received, start listening for file content
+			receiveFile(filePath + fileName, fileSize, inStream);
+			socket.close();
 			servsock.close();
-			throw new IOException("FileInfo error!");
+		} catch (IOException e) {
+			e.printStackTrace();
 		}
 		
-		// 6. after file information is received, start listening for file content
-		receiveFile(fileName + "_recv", fileSize, inputStream);
-		socket.close();
-		servsock.close();
+		String finishMsg = "System Message> file [" + filePath + fileName + "] received!\n";
+		textPane.setSelectionStart(textPane.getText().length());
+		textPane.setSelectionEnd(textPane.getText().length());				
+		textPane.replaceSelection(finishMsg);
 	}
 	
 	private static void receiveFile(String fileName, int fileSize, DataInputStream inputStream) throws IOException {

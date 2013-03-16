@@ -1,5 +1,6 @@
 
 
+import java.awt.FileDialog;
 import java.io.BufferedInputStream;
 import java.io.DataOutputStream;
 import java.io.File;
@@ -7,8 +8,14 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.net.Socket;
 
-public class Transmitter {
-	public Transmitter(String ip, String fileName) throws IOException {
+import javax.swing.JTextPane;
+
+public class Transmitter extends Thread implements Runnable {
+	private Socket socket;
+	private FileDialog fileDialog;
+	private JTextPane textPane;
+	
+	public Transmitter(String ip, FileDialog fd, JTextPane t) throws IOException {
 		/* [File transfer protocol]
 		 * 1. transmitter->server: (IPRequest)username
 		 * 2. server->transmitter: (IPReply)IpOfReceiver
@@ -17,18 +24,37 @@ public class Transmitter {
 		 * 5. transmitter->receiver: (FileInfo)filename%fileSize%
 		 * 6. transmitter->receiver: file content
 		 */
-		Socket socket = new Socket(ip, 25535);
-		DataOutputStream outStream = new DataOutputStream(socket.getOutputStream());
-		outStream.flush();
+		socket = new Socket(ip, 25535);
+		fileDialog = fd;
+		textPane = t;
+	}
+	
+	public void run() {
+		String filePath = "", fileName = "";
 		
-		// 5. transmitter->receiver: (FileInfo)filename%fileSize%
-		long fileSize = new File(fileName).length();
-		String fileInfo = "(FileInfo)" + fileName + "%" + fileSize + "%";
-		outStream.writeUTF(fileInfo);
+		try {
+			DataOutputStream outStream = new DataOutputStream(socket.getOutputStream());
+			outStream.flush();
+
+			// 5. transmitter->receiver: (FileInfo)filename%fileSize%
+			fileDialog.setVisible(true);
+			filePath = fileDialog.getDirectory();
+			fileName = fileDialog.getFile();
+			long fileSize = new File(filePath + fileName).length();
+			String fileInfo = "(FileInfo)" + fileName + "%" + fileSize + "%";
+			outStream.writeUTF(fileInfo);
+
+			// 6. transmitter->receiver: file content
+			transmitFile(filePath + fileName, fileSize, outStream);
+			socket.close();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 		
-		// 6. transmitter->receiver: file content
-	    transmitFile(fileName, fileSize, outStream);
-	    socket.close();
+		String finishMsg = "System Message> file [" + filePath + fileName + "] transmission OK!\n";
+		textPane.setSelectionStart(textPane.getText().length());
+		textPane.setSelectionEnd(textPane.getText().length());				
+		textPane.replaceSelection(finishMsg);
 	}
 	
 	private static void transmitFile(String fileName, long fileSize, DataOutputStream outStream) throws IOException {

@@ -20,7 +20,6 @@ import javax.swing.SwingConstants;
 
 
 public class ChatTabClient extends JPanel {
-	// haaaaaa!
 	public ChatWindowClient cwc; 
 	public JPanel tabPanel;
 	public JTextField textUsername = new JTextField();;
@@ -45,6 +44,19 @@ public class ChatTabClient extends JPanel {
 	private final JButton emo2 = new JButton("");
 	private final JButton emo3 = new JButton("");
 	private final JButton emo4 = new JButton("");
+	private final JButton emo5 = new JButton("");
+	private final JButton emo6 = new JButton("");
+	private final JButton emo7 = new JButton("");
+	private final JButton emo8 = new JButton("");
+	private final JButton emo9 = new JButton("");
+	private final JButton emo10 = new JButton("");
+	private final JButton emo11 = new JButton("");
+	private final JButton emo12 = new JButton("");
+	private final JButton emo13 = new JButton("");
+	private final JButton emo14 = new JButton("");
+	private final JButton emo15 = new JButton("");
+	private final JButton emo16 = new JButton("");
+	
 	private final JScrollPane emoticonScroll = new JScrollPane();;
 	/**
 	 * Launch the application.
@@ -81,10 +93,15 @@ public class ChatTabClient extends JPanel {
 		tabPanel.setBounds(100, 100, 931, 633);
 
 		tabPanel.setLayout(null);
-		emoticonScroll.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
-		emoticonScroll.setBounds(450, 410, 100, 100);
 		
-		tabPanel.add(emoticonScroll);
+		JPanel emoticonPane = new JPanel();
+		emoticonPane.setBounds(450, 420, 100, 100);
+		emoticonTable.setBounds(0, 0, 450, 420);
+		tabPanel.add(emoticonPane);
+		emoticonPane.setLayout(null);
+		emoticonScroll.setBounds(0, 0, 100, 100);
+		emoticonPane.add(emoticonScroll);
+		emoticonScroll.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
 		emoticonScroll.setViewportView(emoticonTable);
 		emoticonTable.setLayout(null);
 		
@@ -97,59 +114,35 @@ public class ChatTabClient extends JPanel {
 		emo2.setBounds(25, 0, 25, 25);
 		emo3.setBounds(50, 0, 25, 25);
 		emo4.setBounds(75, 0, 25, 25);
+		emo5.setBounds(0, 25, 25, 25);
+		emo6.setBounds(25, 25, 25, 25);
+		emo7.setBounds(50, 25, 25, 25);
+		emo8.setBounds(75, 25, 25, 25);
+		emo9.setBounds(0, 49, 25, 25);		
+		emo10.setBounds(25, 49, 25, 25);		
+		emo11.setBounds(50, 49, 25, 25);		
+		emo12.setBounds(75, 49, 25, 25);		
+		emo13.setBounds(0, 73, 25, 25);	
+		emo14.setBounds(25, 73, 25, 25);		
+		emo15.setBounds(50, 73, 25, 25);		
+		emo16.setBounds(75, 73, 25, 25);
 		
 		emoticonTable.add(emo1);
 		emoticonTable.add(emo2);				
 		emoticonTable.add(emo3);				
-		emoticonTable.add(emo4);
-		
-		JButton button = new JButton("");
-		button.setBounds(0, 25, 25, 25);
-		emoticonTable.add(button);
-		
-		JButton button_1 = new JButton("");
-		button_1.setBounds(25, 25, 25, 25);
-		emoticonTable.add(button_1);
-		
-		JButton button_2 = new JButton("");
-		button_2.setBounds(50, 25, 25, 25);
-		emoticonTable.add(button_2);
-		
-		JButton button_3 = new JButton("");
-		button_3.setBounds(75, 25, 25, 25);
-		emoticonTable.add(button_3);
-		
-		JButton button_4 = new JButton("");
-		button_4.setBounds(0, 49, 25, 25);
-		emoticonTable.add(button_4);
-		
-		JButton button_5 = new JButton("");
-		button_5.setBounds(25, 49, 25, 25);
-		emoticonTable.add(button_5);
-		
-		JButton button_6 = new JButton("");
-		button_6.setBounds(50, 49, 25, 25);
-		emoticonTable.add(button_6);
-		
-		JButton button_7 = new JButton("");
-		button_7.setBounds(75, 49, 25, 25);
-		emoticonTable.add(button_7);
-		
-		JButton button_8 = new JButton("");
-		button_8.setBounds(0, 73, 25, 25);
-		emoticonTable.add(button_8);
-		
-		JButton button_9 = new JButton("");
-		button_9.setBounds(25, 73, 25, 25);
-		emoticonTable.add(button_9);
-		
-		JButton button_10 = new JButton("");
-		button_10.setBounds(50, 73, 25, 25);
-		emoticonTable.add(button_10);
-		
-		
-		
-		emoticonScroll.setVisible(false);
+		emoticonTable.add(emo4);						
+		emoticonTable.add(emo5);					
+		emoticonTable.add(emo6);
+		emoticonTable.add(emo7);						
+		emoticonTable.add(emo8);		
+		emoticonTable.add(emo9);	
+		emoticonTable.add(emo10);		
+		emoticonTable.add(emo11);		
+		emoticonTable.add(emo12);		
+		emoticonTable.add(emo13);		
+		emoticonTable.add(emo14);		
+		emoticonTable.add(emo15);		
+		emoticonTable.add(emo16);
 		
 		JLabel label = new JLabel("\u4F7F\u7528\u8005\u5217\u8868");
 		label.setBounds(10, 10, 152, 25);
@@ -161,7 +154,7 @@ public class ChatTabClient extends JPanel {
 			public void actionPerformed(ActionEvent arg0) {
 				username = textUsername.getText();
 				textUsername.setEditable(false);
-				new Thread(listener = new Listener(myself)).start();
+				new Thread(listener = new Listener(myself, 0)).start();
 			    textChat.requestFocus();
 			    btnConnect.setEnabled(false);
 			    btnDisconnect.setEnabled(true);
@@ -194,6 +187,7 @@ public class ChatTabClient extends JPanel {
 		tabPanel.add(btnWhisper);
 		btnChatroom.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
+				cwc.sentNewRoomReq();
 				cwc.createNewRoom();
 			}
 		});
@@ -212,10 +206,18 @@ public class ChatTabClient extends JPanel {
 		btnTransfer.setBounds(677, 525, 104, 23);
 		btnTransfer.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
-	            FileDialog fd = new FileDialog(cwc.frmLabChatroom, "new", FileDialog.LOAD);
-	            fd.setVisible(true);
-	            String fileName = fd.getDirectory() + fd.getFile();
-			}
+				if (userListUI.isSelectionEmpty()) return;
+				
+				// 1. transmitter->server: (IPRequest)username
+				String receiver = userListUI.getSelectedValue().toString();
+				if (username.equals(receiver)) return;
+				
+				try {
+					listener.out.writeUTF("(IPRequest)" + receiver);
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+			}			
 		});
 		tabPanel.add(btnTransfer);
 		
@@ -232,7 +234,7 @@ public class ChatTabClient extends JPanel {
 			public void actionPerformed(ActionEvent arg0) {			
 				try
 				{
-					listener.out.writeUTF(listener.user + "> " + textChat.getText());
+					listener.out.writeUTF("(text%"+listener.user+"%"+listener.room_id+")" + textChat.getText());
 				}
 				catch(Exception ex)
 				{
@@ -262,6 +264,19 @@ public class ChatTabClient extends JPanel {
 			};
 		}; 
 		return ma;
+	}
+	
+	public void autoConnect(int r_id, String u_name){
+		username = u_name;
+		textUsername.setText(username);
+		textUsername.setEditable(false);
+		new Thread(listener = new Listener(myself, r_id)).start();
+	    textChat.requestFocus();
+	    btnConnect.setEnabled(false);
+	    btnDisconnect.setEnabled(false);
+	    btnConnect.setVisible(false);
+	    btnDisconnect.setVisible(false);
+	    textChat.setEnabled(true);		
 	}
 }
 

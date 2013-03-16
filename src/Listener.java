@@ -1,7 +1,9 @@
+import java.awt.FileDialog;
 import java.awt.Frame;
 import java.awt.TextField;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
+import java.io.IOException;
 import java.net.Socket;
 import java.net.SocketException;
 import java.util.Vector;
@@ -14,14 +16,16 @@ class Listener extends Frame implements Runnable
 	TextField chatInput = new TextField();
 	Socket socket;
 	String user;
+	int room_id;
 	DataOutputStream out; // client->server
 	DataInputStream in;   // server->client
 	ChatTabClient ctc;
 
-	public Listener(ChatTabClient c)
+	public Listener(ChatTabClient c, int r_id)
 	{		
 		ctc = c; 
 		user = ctc.username;
+		room_id = r_id;
 		try
 		{
 			socket = new Socket("127.0.0.1", 2525);
@@ -29,7 +33,6 @@ class Listener extends Frame implements Runnable
 			in = new DataInputStream(socket.getInputStream());
 			
 			String userStr = in.readUTF();
-			System.out.println("Userstr: " + userStr);
 			if (userStr.startsWith("(UserList_Room0)")) {
 				int begin = userStr.indexOf(')') + 1;
 				while (userStr.indexOf('%', begin) > 0) {
@@ -87,8 +90,9 @@ class Listener extends Frame implements Runnable
 		ctc.textPane.insertIcon(new ImageIcon(s));		
 	}
 	
-	private boolean isSpecialMsg(String msg) {
-		String header = msg.substring(0, msg.indexOf(")") + 1), username;
+	private boolean isSpecialMsg(String msg) throws IOException {
+		String header = msg.substring(0, msg.indexOf(")") + 1), username, ip, fileName, filePath;
+		FileDialog fd;
 		
 		switch (header) {
 		case "(UserConnected_Room0)":
@@ -98,6 +102,28 @@ class Listener extends Frame implements Runnable
 		case "(UserDisconnected_Room0)":
 			username = msg.substring(msg.indexOf(")") + 1);
 			ctc.userList.removeElement(username);
+			return true;
+		case "(IPReply)":
+			// 2. server->transmitter: (IPReply)IpOfReceiver
+			// 3. transmitter->server: (FileRequest)username
+			username = msg.substring(msg.indexOf(")") + 1, msg.indexOf("%"));
+			ip = msg.substring(msg.indexOf("%") + 1);
+			out.writeUTF("(FileRequest)" + username);
+			
+			// use FileDialog to get filename
+            fd = new FileDialog(ctc.cwc.frmLabChatroom, "Load file..", FileDialog.LOAD);
+            fd.setLocationRelativeTo(ctc.tabPanel);
+            
+            // 5. transmitter->receiver: (FileInfo)filename%fileSize%
+            Thread transThread = new Thread(new Transmitter(ip, fd, ctc.textPane));
+            transThread.start();
+			return true;
+		case "(FileRequest)":
+			// use FileDialog to get filename
+            fd = new FileDialog(ctc.cwc.frmLabChatroom, "Save file..", FileDialog.SAVE);
+            fd.setLocationRelativeTo(ctc.tabPanel);
+            Thread recvThread = new Thread(new Receiver(fd, ctc.textPane));
+            recvThread.start();
 			return true;
 		}
 		
@@ -141,7 +167,7 @@ class Listener extends Frame implements Runnable
 			if (find.get(min_index) != -1){
 				switch (min_index){
 					case 0:
-						ret = new IconInfo("1.png", find.get(min_index));
+						ret = new IconInfo("tusky.gif", find.get(min_index));
 						break;
 					case 1:
 						ret = new IconInfo("2.png", find.get(min_index));
@@ -153,6 +179,10 @@ class Listener extends Frame implements Runnable
 			}
 		}
 		return ret;
+	}
+	
+	public void registerRoom(String u_name){
+		
 	}
 }
 

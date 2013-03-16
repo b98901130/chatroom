@@ -20,6 +20,7 @@ import javax.swing.SwingConstants;
 
 
 public class ChatTabClient extends JPanel {
+	// haaaaaa!
 	public ChatWindowClient cwc; 
 	public JPanel tabPanel;
 	public JTextField textUsername = new JTextField();;
@@ -65,7 +66,7 @@ public class ChatTabClient extends JPanel {
 
 	/**
 	 * Create the application.
-	 */
+	 */	
 	public ChatTabClient(ChatWindowClient _cwc) {
 		cwc = _cwc;
 		myself = this;

@@ -3,6 +3,7 @@ import java.awt.TextField;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.net.Socket;
+import java.net.SocketException;
 import java.util.Vector;
 
 import javax.swing.ImageIcon;
@@ -13,8 +14,8 @@ class Listener extends Frame implements Runnable
 	TextField chatInput = new TextField();
 	Socket socket;
 	String user;
-	DataOutputStream out;
-	DataInputStream in;
+	DataOutputStream out; // client->server
+	DataInputStream in;   // server->client
 	ChatTabClient ctc;
 
 	public Listener(ChatTabClient c)
@@ -23,10 +24,24 @@ class Listener extends Frame implements Runnable
 		user = ctc.username;
 		try
 		{
-			//��server
-			socket = new Socket("140.112.18.199", 2525);
+			socket = new Socket("127.0.0.1", 2525);
 			out = new DataOutputStream(socket.getOutputStream());
 			in = new DataInputStream(socket.getInputStream());
+			
+			String userStr = in.readUTF();
+			System.out.println("Userstr: " + userStr);
+			if (userStr.startsWith("(UserList_Room0)")) {
+				int begin = userStr.indexOf(')') + 1;
+				while (userStr.indexOf('%', begin) > 0) {
+					ctc.userList.addElement(userStr.substring(begin, userStr.indexOf('%', begin)));
+					System.out.println(userStr.substring(begin, userStr.indexOf('%', begin)));
+					begin = userStr.indexOf('%', begin) + 1;
+				}
+			}
+			
+			if (user.length() == 0)
+				user = "null";
+			out.writeUTF(user);
 		}
 		catch(Exception e)
 		{
@@ -41,8 +56,15 @@ class Listener extends Frame implements Runnable
 		{
 			while(true)
 			{				
-				String ReceivedLine = in.readUTF();	
-				parseAll(ReceivedLine);
+				String ReceivedLine = "";
+				try {
+					ReceivedLine = in.readUTF();
+				} catch (SocketException e) {
+					ctc.userList.removeAllElements();
+					return;
+				}
+				if (!isSpecialMsg(ReceivedLine))
+					parseAll(ReceivedLine);
 			}			
 		}
 		catch(Exception e)
@@ -61,6 +83,23 @@ class Listener extends Frame implements Runnable
 		ctc.textPane.setSelectionStart(ctc.textPane.getText().length());
 		ctc.textPane.setSelectionEnd(ctc.textPane.getText().length());		
 		ctc.textPane.insertIcon(new ImageIcon(s));		
+	}
+	
+	private boolean isSpecialMsg(String msg) {
+		String header = msg.substring(0, msg.indexOf(")") + 1), username;
+		
+		switch (header) {
+		case "(UserConnected_Room0)":
+			username = msg.substring(msg.indexOf(")") + 1);
+			ctc.userList.addElement(username);
+			return true;
+		case "(UserDisconnected_Room0)":
+			username = msg.substring(msg.indexOf(")") + 1);
+			ctc.userList.removeElement(username);
+			return true;
+		}
+		
+		return false;
 	}
 	
 	public void parseAll(String s){

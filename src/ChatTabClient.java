@@ -1,24 +1,22 @@
 import javax.swing.JPanel;
 
 
-import java.awt.BorderLayout;
-import java.awt.EventQueue;
+import java.awt.FileDialog;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.io.IOException;
 
+import javax.swing.DefaultListModel;
 import javax.swing.JButton;
-import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JList;
-import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextField;
 import javax.swing.JTextPane;
 import javax.swing.ScrollPaneConstants;
 import javax.swing.SwingConstants;
-import javax.swing.border.EmptyBorder;
 
 
 public class ChatTabClient extends JPanel {
@@ -26,7 +24,8 @@ public class ChatTabClient extends JPanel {
 	public JPanel tabPanel;
 	public JTextField textUsername = new JTextField();;
 	public JTextField textChat = new JTextField();
-	public JList userList = new JList();
+	public DefaultListModel<String> userList = new DefaultListModel<String>();
+	public JList userListUI = new JList(userList);
 	public Listener listener;
 	public ChatTabClient myself;
 	public JTextPane textPane= new JTextPane();
@@ -109,35 +108,44 @@ public class ChatTabClient extends JPanel {
 		label.setBounds(10, 10, 152, 25);
 		label.setHorizontalAlignment(SwingConstants.CENTER);
 		tabPanel.add(label);
+		
 		btnConnect.setBounds(10, 525, 87, 23);
-		
-		
-		btnConnect.addMouseListener(new MouseAdapter() {
-			@Override
-			public void mousePressed(MouseEvent arg0) {
+		btnConnect.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent arg0) {
 				username = textUsername.getText();
 				textUsername.setEditable(false);
 				new Thread(listener = new Listener(myself)).start();
 			    textChat.requestFocus();
+			    btnConnect.setEnabled(false);
 			}
 		});
-		
 		tabPanel.add(btnConnect);
+		
 		btnDisconnect.setBounds(107, 525, 104, 23);
+		btnDisconnect.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent arg0) {
+				try {
+					listener.socket.close();
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+				textUsername.setEditable(true);
+				btnConnect.setEnabled(true);
+			}
+		});
 		tabPanel.add(btnDisconnect);
+		
 		btnWhisper.setBounds(221, 525, 104, 23);
 		tabPanel.add(btnWhisper);
-		btnChatroom.addMouseListener(new MouseAdapter() {
-			@Override
-			public void mousePressed(MouseEvent arg0) {
+		btnChatroom.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent arg0) {
 				cwc.createNewRoom();
 			}
 		});
 		btnChatroom.setBounds(335, 525, 104, 23);
 		tabPanel.add(btnChatroom);
-		btnEmoticon.addMouseListener(new MouseAdapter() {
-			@Override
-			public void mousePressed(MouseEvent e) {				
+		btnEmoticon.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent arg0) {				
 				emoticonScroll.setVisible(!emoticonScroll.isVisible());
 			}
 		});
@@ -145,8 +153,17 @@ public class ChatTabClient extends JPanel {
 		tabPanel.add(btnEmoticon);						
 		btnCustom.setBounds(563, 525, 104, 23);
 		tabPanel.add(btnCustom);				
+		
 		btnTransfer.setBounds(677, 525, 104, 23);
-		tabPanel.add(btnTransfer);		
+		btnTransfer.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent arg0) {
+	            FileDialog fd = new FileDialog(cwc.frmLabChatroom, "new", FileDialog.LOAD);
+	            fd.setVisible(true);
+	            String fileName = fd.getDirectory() + fd.getFile();
+			}
+		});
+		tabPanel.add(btnTransfer);
+		
 		btnVoice.setBounds(791, 525, 116, 23);
 		tabPanel.add(btnVoice);		
 		
@@ -169,8 +186,8 @@ public class ChatTabClient extends JPanel {
 			}
 		});
 		tabPanel.add(textChat);		
-		userList.setBounds(10, 45, 152, 470);
-		tabPanel.add(userList);
+		userListUI.setBounds(10, 45, 152, 470);
+		tabPanel.add(userListUI);
 		textPane.setBounds(172, 10, 731, 505);
 	    textScroll.setBounds(172, 10, 731, 505);
 	    tabPanel.add(textScroll);

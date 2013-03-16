@@ -103,6 +103,54 @@ public class ChatTabClient extends JPanel {
 		emoticonTable.add(emo3);				
 		emoticonTable.add(emo4);
 		
+		JButton button = new JButton("");
+		button.setBounds(0, 25, 25, 25);
+		emoticonTable.add(button);
+		
+		JButton button_1 = new JButton("");
+		button_1.setBounds(25, 25, 25, 25);
+		emoticonTable.add(button_1);
+		
+		JButton button_2 = new JButton("");
+		button_2.setBounds(50, 25, 25, 25);
+		emoticonTable.add(button_2);
+		
+		JButton button_3 = new JButton("");
+		button_3.setBounds(75, 25, 25, 25);
+		emoticonTable.add(button_3);
+		
+		JButton button_4 = new JButton("");
+		button_4.setBounds(0, 49, 25, 25);
+		emoticonTable.add(button_4);
+		
+		JButton button_5 = new JButton("");
+		button_5.setBounds(25, 49, 25, 25);
+		emoticonTable.add(button_5);
+		
+		JButton button_6 = new JButton("");
+		button_6.setBounds(50, 49, 25, 25);
+		emoticonTable.add(button_6);
+		
+		JButton button_7 = new JButton("");
+		button_7.setBounds(75, 49, 25, 25);
+		emoticonTable.add(button_7);
+		
+		JButton button_8 = new JButton("");
+		button_8.setBounds(0, 73, 25, 25);
+		emoticonTable.add(button_8);
+		
+		JButton button_9 = new JButton("");
+		button_9.setBounds(25, 73, 25, 25);
+		emoticonTable.add(button_9);
+		
+		JButton button_10 = new JButton("");
+		button_10.setBounds(50, 73, 25, 25);
+		emoticonTable.add(button_10);
+		
+		JButton button_11 = new JButton("");
+		button_11.setBounds(75, 73, 25, 25);
+		emoticonTable.add(button_11);
+		
 		emoticonScroll.setVisible(false);
 		
 		JLabel label = new JLabel("\u4F7F\u7528\u8005\u5217\u8868");
@@ -177,6 +225,7 @@ public class ChatTabClient extends JPanel {
 		tabPanel.add(btnVoice);		
 		
 		textUsername = new JTextField();
+		textUsername.setToolTipText("pleas enter username");
 		textUsername.setBounds(10, 558, 152, 26);
 		tabPanel.add(textUsername);
 		textUsername.setColumns(10);

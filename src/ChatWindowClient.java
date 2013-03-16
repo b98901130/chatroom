@@ -37,13 +37,13 @@ public class ChatWindowClient {
 	private void initialize() {		
 		frmLabChatroom = new JFrame();
 		frmLabChatroom.setTitle("Lab1 Chatroom");
-		frmLabChatroom.setBounds(100, 100, 1028, 668);
+		frmLabChatroom.setBounds(100, 100, 981, 668);
 		frmLabChatroom.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		frmLabChatroom.getContentPane().setLayout(null);
 		
 		tabs.add(new ChatTabClient(this));		
 		tabbedPane = new JTabbedPane();
-		tabbedPane.setBounds(0, 0, 1012, 630);
+		tabbedPane.setBounds(0, 0, 965, 630);
 		frmLabChatroom.getContentPane().add(tabbedPane);		
 		tabbedPane.addTab("Lobby", null, tabs.get(0).tabPanel, null);				
 

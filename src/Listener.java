@@ -1,13 +1,8 @@
-import java.awt.BorderLayout;
-import java.awt.Color;
 import java.awt.Frame;
 import java.awt.TextField;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.net.Socket;
-import java.util.ArrayList;
 import java.util.Vector;
 
 import javax.swing.ImageIcon;
@@ -17,15 +12,15 @@ class Listener extends Frame implements Runnable
 {
 	TextField chatInput = new TextField();
 	Socket socket;
-	static String user;
+	String user;
 	DataOutputStream out;
 	DataInputStream in;
-	ChatWindowClient cwc;
+	ChatTabClient ctc;
 
-	public Listener(ChatWindowClient c)
+	public Listener(ChatTabClient c)
 	{		
-		cwc = c; 
-		user = cwc.username;
+		ctc = c; 
+		user = ctc.username;
 		try
 		{
 			//��server
@@ -57,15 +52,15 @@ class Listener extends Frame implements Runnable
 	}
 	
 	public void printText(String s){
-		cwc.textPane.setSelectionStart(cwc.textPane.getText().length());
-		cwc.textPane.setSelectionEnd(cwc.textPane.getText().length());				
-		cwc.textPane.replaceSelection(s);
+		ctc.textPane.setSelectionStart(ctc.textPane.getText().length());
+		ctc.textPane.setSelectionEnd(ctc.textPane.getText().length());				
+		ctc.textPane.replaceSelection(s);
 	}
 	
 	public void printIcon(String s){
-		cwc.textPane.setSelectionStart(cwc.textPane.getText().length());
-		cwc.textPane.setSelectionEnd(cwc.textPane.getText().length());		
-		cwc.textPane.insertIcon(new ImageIcon(s));		
+		ctc.textPane.setSelectionStart(ctc.textPane.getText().length());
+		ctc.textPane.setSelectionEnd(ctc.textPane.getText().length());		
+		ctc.textPane.insertIcon(new ImageIcon(s));		
 	}
 	
 	public void parseAll(String s){

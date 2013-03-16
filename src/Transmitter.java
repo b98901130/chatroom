@@ -37,6 +37,9 @@ public class Transmitter extends Thread implements Runnable {
 			outStream.flush();
 
 			// 5. transmitter->receiver: (FileInfo)filename%fileSize%
+			fileDialog.setAutoRequestFocus(true);
+			fileDialog.setLocationByPlatform(true);
+			fileDialog.setLocationRelativeTo(textPane);
 			fileDialog.setVisible(true);
 			filePath = fileDialog.getDirectory();
 			fileName = fileDialog.getFile();

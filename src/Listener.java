@@ -74,9 +74,11 @@ class Listener extends Frame implements Runnable
 	}
 	
 	public void printText(String s){
+		ctc.textPane.setEditable(true);
 		ctc.textPane.setSelectionStart(ctc.textPane.getText().length());
 		ctc.textPane.setSelectionEnd(ctc.textPane.getText().length());				
 		ctc.textPane.replaceSelection(s);
+		ctc.textPane.setEditable(false);
 	}
 	
 	public void printIcon(String s){

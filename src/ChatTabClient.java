@@ -117,11 +117,15 @@ public class ChatTabClient extends JPanel {
 				new Thread(listener = new Listener(myself)).start();
 			    textChat.requestFocus();
 			    btnConnect.setEnabled(false);
+			    btnDisconnect.setEnabled(true);
+			    btnConnect.setVisible(false);
+			    btnDisconnect.setVisible(true);
+			    textChat.setEnabled(true);
 			}
 		});
 		tabPanel.add(btnConnect);
 		
-		btnDisconnect.setBounds(107, 525, 104, 23);
+		btnDisconnect.setBounds(10, 525, 87, 23);
 		btnDisconnect.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
 				try {
@@ -131,6 +135,10 @@ public class ChatTabClient extends JPanel {
 				}
 				textUsername.setEditable(true);
 				btnConnect.setEnabled(true);
+				btnDisconnect.setEnabled(false);
+			    btnConnect.setVisible(true);
+			    btnDisconnect.setVisible(false);
+			    textChat.setEnabled(false);
 			}
 		});
 		tabPanel.add(btnDisconnect);
@@ -184,8 +192,10 @@ public class ChatTabClient extends JPanel {
 				}
 				textChat.setText(null);				
 			}
-		});
-		tabPanel.add(textChat);		
+		});		
+		tabPanel.add(textChat);
+		textChat.setEnabled(false);
+		
 		userListUI.setBounds(10, 45, 152, 470);
 		tabPanel.add(userListUI);
 		textPane.setBounds(172, 10, 731, 505);

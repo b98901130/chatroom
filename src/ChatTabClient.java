@@ -147,9 +147,7 @@ public class ChatTabClient extends JPanel {
 		button_10.setBounds(50, 73, 25, 25);
 		emoticonTable.add(button_10);
 		
-		JButton button_11 = new JButton("");
-		button_11.setBounds(75, 73, 25, 25);
-		emoticonTable.add(button_11);
+		
 		
 		emoticonScroll.setVisible(false);
 		

@@ -23,14 +23,14 @@ public class ChatTabClient extends JPanel {
 	public ChatWindowClient cwc; 
 	public int room_id;
 	public JPanel tabPanel;
-	public JTextField textUsername = new JTextField();;
-	public JTextField textChat = new JTextField();
+	public JTextField textUsername = null;
+	public JTextField textChat = null;
 	public DefaultListModel<String> userList = new DefaultListModel<String>();
 	public JList userListUI = new JList(userList);
 
 	public ChatTabClient myself;
-	public JTextPane textPane= new JTextPane();
-	public JScrollPane textScroll = new JScrollPane();	
+	public JTextPane textPane = new JTextPane();
+	public JScrollPane textScroll = new JScrollPane();
 	
 	public JButton btnConnect = new JButton("\u9023\u7DDA");
 	public JButton btnDisconnect = new JButton("\u96E2\u7DDA");
@@ -145,6 +145,15 @@ public class ChatTabClient extends JPanel {
 		emoticonTable.add(emo14);		
 		emoticonTable.add(emo15);		
 		emoticonTable.add(emo16);
+		
+		if (room_id == 0) {
+			textUsername = new JTextField();
+			textChat = new JTextField();
+		}
+		else {
+			textUsername = cwc.tabs.get(0).textUsername;
+			textChat = cwc.tabs.get(0).textChat;
+		}
 		
 		JLabel label = new JLabel("\u4F7F\u7528\u8005\u5217\u8868");
 		label.setBounds(10, 10, 152, 25);

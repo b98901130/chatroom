@@ -71,7 +71,7 @@ public class ChatWindowClient {
 		System.out.println("start to open tab");
 		tabs.put(r, new ChatTabClient(this, r));
 		tabs.get(r).autoConnect(r);		
-		tabbedPane.addTab("Room", null, tabs.get(r).tabPanel, null);
+		tabbedPane.addTab("Room" + r, null, tabs.get(r).tabPanel, null);
 		tabs.get(r).room_id = r;
 	}
 }

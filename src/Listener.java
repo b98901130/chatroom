@@ -15,7 +15,6 @@ class Listener extends Frame implements Runnable
 {
 	TextField chatInput = new TextField();
 	Socket socket;
-	int room_id;
 	DataOutputStream out; // client->server
 	DataInputStream in;   // server->client
 	ChatWindowClient cwc;
@@ -102,19 +101,24 @@ class Listener extends Frame implements Runnable
 	}
 	
 	private boolean isSpecialMsg(String msg) throws IOException {
-		String header = msg.substring(0, msg.indexOf(")") + 1), username, ip, fileName, filePath, r_id;
+		String header = msg.substring(0, msg.indexOf(")") + 1), username, ip;
+		int room_id;
 		FileDialog fd;
 		
-		switch (header) {
-		case "(UserConnected_Room0)":
+		if (header.startsWith("(UserConnected_Room")) {
+			System.out.println(msg);
+			room_id = Integer.parseInt(header.substring(19, header.indexOf(')')));
 			username = msg.substring(msg.indexOf(")") + 1);
-			cwc.tabs.get(0).userList.addElement(username);
+			cwc.tabs.get(room_id).userList.addElement(username);
 			return true;
-		case "(UserDisconnected_Room0)":
+		}
+		else if (header.startsWith("(UserDisconnected_Room")) {
+			room_id = Integer.parseInt(header.substring(22, header.indexOf(')')));
 			username = msg.substring(msg.indexOf(")") + 1);
-			cwc.tabs.get(0).userList.removeElement(username);
+			cwc.tabs.get(room_id).userList.removeElement(username);
 			return true;
-		case "(IPReply)":
+		}
+		else if (header.equals("(IPReply)")) {
 			// 2. server->transmitter: (IPReply)IpOfReceiver
 			// 3. transmitter->server: (FileRequest)username
 			username = msg.substring(msg.indexOf(")") + 1, msg.indexOf("%"));
@@ -129,16 +133,17 @@ class Listener extends Frame implements Runnable
             Thread transThread = new Thread(new Transmitter(ip, fd, cwc.tabs.get(0).textPane));
             transThread.start();
 			return true;
-		case "(FileRequest)":
+		}
+		else if (header.equals("(FileRequest)")) {
 			// use FileDialog to get filename
             fd = new FileDialog(cwc.frmLabChatroom, "Save file..", FileDialog.SAVE);
             fd.setLocationRelativeTo(cwc.tabs.get(0).tabPanel);
             Thread recvThread = new Thread(new Receiver(fd, cwc.tabs.get(0).textPane));
             recvThread.start();
 			return true;
-		case "(Opened_Room)":
-			r_id = msg.substring(msg.indexOf(")") + 1);
-			room_id = Integer.parseInt(r_id);
+		}
+		else if (header.equals("(Opened_Room)")) {
+			room_id = Integer.parseInt(msg.substring(msg.indexOf(")") + 1));
 			cwc.createNewRoom(room_id);
 			return true;
 		}
@@ -147,6 +152,7 @@ class Listener extends Frame implements Runnable
 	}
 	
 	public void parseAll(String s){
+		System.out.println(s);
 		int offset1 = s.indexOf("%");
 		int offset2 = s.indexOf("%", offset1+1);
 		int offset3 = s.indexOf(")", offset2+1);

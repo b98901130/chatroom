@@ -41,6 +41,7 @@ class Listener extends Frame implements Runnable
 			if (cwc.username.length() == 0)
 				cwc.username = "null";
 			out.writeUTF(cwc.username);
+			out.flush();
 		}
 		catch(Exception e)
 		{
@@ -68,36 +69,24 @@ class Listener extends Frame implements Runnable
 		}
 		catch(Exception e)
 		{
-			System.out.println(e);
+			e.printStackTrace();
 		}
 	}
 	
-	public void printText(int r, String s){			
-		cwc.tabs.get(0).textPane.setEditable(true);
-		cwc.tabs.get(0).textPane.setSelectionStart(cwc.tabs.get(0).textPane.getText().length());
-		cwc.tabs.get(0).textPane.setSelectionEnd(cwc.tabs.get(0).textPane.getText().length());
-		cwc.tabs.get(0).textPane.replaceSelection(s);
-		cwc.tabs.get(0).textPane.setEditable(false);
-		if (r != 0){
-			if (cwc.tabs.get(r) != null){
-				cwc.tabs.get(r).textPane.setEditable(true);
-				cwc.tabs.get(r).textPane.setSelectionStart(cwc.tabs.get(r).textPane.getText().length());
-				cwc.tabs.get(r).textPane.setSelectionEnd(cwc.tabs.get(r).textPane.getText().length());
-				cwc.tabs.get(r).textPane.replaceSelection(s);
-				cwc.tabs.get(r).textPane.setEditable(false);
-			}
+	public void printText(int r, String s) {			
+		if (cwc.tabs.get(r) != null) {
+			cwc.tabs.get(r).textPane.setEditable(true);
+			cwc.tabs.get(r).textPane.setSelectionStart(cwc.tabs.get(r).textPane.getText().length());
+			cwc.tabs.get(r).textPane.setSelectionEnd(cwc.tabs.get(r).textPane.getText().length());
+			cwc.tabs.get(r).textPane.replaceSelection(s);
+			cwc.tabs.get(r).textPane.setEditable(false);
 		}
 	}
 	
 	public void printIcon(int r, String s){
-		cwc.tabs.get(0).textPane.setSelectionStart(cwc.tabs.get(0).textPane.getText().length());
-		cwc.tabs.get(0).textPane.setSelectionEnd(cwc.tabs.get(0).textPane.getText().length());		
-		cwc.tabs.get(0).textPane.insertIcon(new ImageIcon(s));
-		if (r != 0){
-			cwc.tabs.get(r).textPane.setSelectionStart(cwc.tabs.get(r).textPane.getText().length());
-			cwc.tabs.get(r).textPane.setSelectionEnd(cwc.tabs.get(r).textPane.getText().length());		
-			cwc.tabs.get(r).textPane.insertIcon(new ImageIcon(s));
-		}
+		cwc.tabs.get(r).textPane.setSelectionStart(cwc.tabs.get(r).textPane.getText().length());
+		cwc.tabs.get(r).textPane.setSelectionEnd(cwc.tabs.get(r).textPane.getText().length());		
+		cwc.tabs.get(r).textPane.insertIcon(new ImageIcon(s));
 	}
 	
 	private boolean isSpecialMsg(String msg) throws IOException {
@@ -124,6 +113,7 @@ class Listener extends Frame implements Runnable
 			username = msg.substring(msg.indexOf(")") + 1, msg.indexOf("%"));
 			ip = msg.substring(msg.indexOf("%") + 1);
 			out.writeUTF("(FileRequest)" + username);
+			out.flush();
 			
 			// use FileDialog to get filename
             fd = new FileDialog(cwc.frmLabChatroom, "Load file..", FileDialog.LOAD);
@@ -152,7 +142,9 @@ class Listener extends Frame implements Runnable
 	}
 	
 	public void parseAll(String s){
-		System.out.println(s);
+		if (!s.startsWith("(text"))
+			return;
+		
 		int offset1 = s.indexOf("%");
 		int offset2 = s.indexOf("%", offset1+1);
 		int offset3 = s.indexOf(")", offset2+1);
@@ -160,19 +152,12 @@ class Listener extends Frame implements Runnable
 		String room_str = s.substring(offset2+1, offset3);
 		int r = Integer.parseInt(room_str);
 		
-		cwc.tabs.get(0).textPane.setEditable(true);
-		cwc.tabs.get(0).textPane.setSelectionStart(cwc.tabs.get(0).textPane.getText().length());
-		cwc.tabs.get(0).textPane.setSelectionEnd(cwc.tabs.get(0).textPane.getText().length());
-		cwc.tabs.get(0).textPane.replaceSelection(name + ": ");
-		cwc.tabs.get(0).textPane.setEditable(false);
-		if (r != 0){
-			if (cwc.tabs.get(r) != null){
-				cwc.tabs.get(r).textPane.setEditable(true);	
-				cwc.tabs.get(r).textPane.setSelectionStart(cwc.tabs.get(r).textPane.getText().length());
-				cwc.tabs.get(r).textPane.setSelectionEnd(cwc.tabs.get(r).textPane.getText().length());
-				cwc.tabs.get(r).textPane.replaceSelection(name + ": ");
-				cwc.tabs.get(r).textPane.setEditable(false);
-			}
+		if (cwc.tabs.get(r) != null){
+			cwc.tabs.get(r).textPane.setEditable(true);	
+			cwc.tabs.get(r).textPane.setSelectionStart(cwc.tabs.get(r).textPane.getText().length());
+			cwc.tabs.get(r).textPane.setSelectionEnd(cwc.tabs.get(r).textPane.getText().length());
+			cwc.tabs.get(r).textPane.replaceSelection(name + ": ");
+			cwc.tabs.get(r).textPane.setEditable(false);
 		}
 		
 		int begin = offset3+1;

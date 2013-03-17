@@ -1,7 +1,5 @@
 import javax.swing.JPanel;
 
-
-import java.awt.FileDialog;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
@@ -23,8 +21,8 @@ public class ChatTabClient extends JPanel {
 	public ChatWindowClient cwc; 
 	public int room_id;
 	public JPanel tabPanel;
-	public JTextField textUsername = null;
-	public JTextField textChat = null;
+	public JTextField textUsername = new JTextField();
+	public JTextField textChat = new JTextField();
 	public DefaultListModel<String> userList = new DefaultListModel<String>();
 	public JList userListUI = new JList(userList);
 
@@ -40,6 +38,8 @@ public class ChatTabClient extends JPanel {
 	public JButton btnCustom = new JButton("\u6A5F\u5668\u4EBA");
 	public JButton btnTransfer = new JButton("\u50B3\u9001\u6A94\u6848");
 	public JButton btnVoice = new JButton("\u8A9E\u97F3\u901A\u8A71");
+	public JButton btnLeaveRoom = new JButton("\u96E2\u958b");
+	private final JPanel emoticonPane = new JPanel();
 	private final JPanel emoticonTable = new JPanel();
 	private final JButton emo1 = new JButton("");
 	private final JButton emo2 = new JButton("");
@@ -58,7 +58,7 @@ public class ChatTabClient extends JPanel {
 	private final JButton emo15 = new JButton("");
 	private final JButton emo16 = new JButton("");
 	
-	private final JScrollPane emoticonScroll = new JScrollPane();;
+	private final JScrollPane emoticonScroll = new JScrollPane();
 	/**
 	 * Launch the application.
 	 */
@@ -96,7 +96,6 @@ public class ChatTabClient extends JPanel {
 
 		tabPanel.setLayout(null);
 		
-		JPanel emoticonPane = new JPanel();
 		emoticonPane.setBounds(450, 420, 100, 100);
 		emoticonTable.setBounds(0, 0, 450, 420);
 		tabPanel.add(emoticonPane);
@@ -106,6 +105,7 @@ public class ChatTabClient extends JPanel {
 		emoticonScroll.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
 		emoticonScroll.setViewportView(emoticonTable);
 		emoticonTable.setLayout(null);
+		emoticonPane.setVisible(false);
 		
 		emo1.addMouseListener(emoMouseListener("{:D}"));
 		emo2.addMouseListener(emoMouseListener("{:)}"));
@@ -146,21 +146,11 @@ public class ChatTabClient extends JPanel {
 		emoticonTable.add(emo15);		
 		emoticonTable.add(emo16);
 		
-		if (room_id == 0) {
-			textUsername = new JTextField();
-			textChat = new JTextField();
-		}
-		else {
-			textUsername = cwc.tabs.get(0).textUsername;
-			textChat = cwc.tabs.get(0).textChat;
-		}
-		
 		JLabel label = new JLabel("\u4F7F\u7528\u8005\u5217\u8868");
 		label.setBounds(10, 10, 152, 25);
 		label.setHorizontalAlignment(SwingConstants.CENTER);
 		tabPanel.add(label);
 		
-		btnConnect.setBounds(10, 525, 87, 23);
 		btnConnect.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
 				cwc.username = textUsername.getText();
@@ -174,9 +164,9 @@ public class ChatTabClient extends JPanel {
 			    textChat.setEnabled(true);
 			}
 		});
+		btnConnect.setBounds(10, 525, 87, 23);
 		tabPanel.add(btnConnect);
 		
-		btnDisconnect.setBounds(10, 525, 87, 23);
 		btnDisconnect.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
 				try {
@@ -190,12 +180,18 @@ public class ChatTabClient extends JPanel {
 			    btnConnect.setVisible(true);
 			    btnDisconnect.setVisible(false);
 			    textChat.setEnabled(false);
+			    textPane.setEditable(true);
+			    textPane.setText("");
+			    textPane.setEditable(false);
+			    cwc.removeAllTabs();
 			}
 		});
+		btnDisconnect.setBounds(10, 525, 87, 23);
 		tabPanel.add(btnDisconnect);
 		
 		btnWhisper.setBounds(221, 525, 104, 23);
 		tabPanel.add(btnWhisper);
+		
 		btnChatroom.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
 				cwc.sentNewRoomReq();				
@@ -203,17 +199,18 @@ public class ChatTabClient extends JPanel {
 		});
 		btnChatroom.setBounds(335, 525, 104, 23);
 		tabPanel.add(btnChatroom);
+		
 		btnEmoticon.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {				
-				emoticonScroll.setVisible(!emoticonScroll.isVisible());
+				emoticonPane.setVisible(!emoticonPane.isVisible());
 			}
 		});
 		btnEmoticon.setBounds(449, 525, 104, 23);
 		tabPanel.add(btnEmoticon);						
+		
 		btnCustom.setBounds(563, 525, 104, 23);
 		tabPanel.add(btnCustom);				
 		
-		btnTransfer.setBounds(677, 525, 104, 23);
 		btnTransfer.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
 				if (userListUI.isSelectionEmpty()) return;
@@ -224,15 +221,35 @@ public class ChatTabClient extends JPanel {
 				
 				try {
 					cwc.listener.out.writeUTF("(IPRequest)" + receiver);
+					cwc.listener.out.flush();
 				} catch (IOException e) {
 					e.printStackTrace();
 				}
 			}			
 		});
+		btnTransfer.setBounds(677, 525, 104, 23);
 		tabPanel.add(btnTransfer);
 		
 		btnVoice.setBounds(791, 525, 116, 23);
 		tabPanel.add(btnVoice);		
+		
+		btnLeaveRoom.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent arg0) {		
+				cwc.removeTab(room_id);
+				try
+				{
+					cwc.listener.out.writeUTF("(LeaveRoomRequest)");
+					cwc.listener.out.flush();
+				}
+				catch(Exception ex)
+				{
+					ex.printStackTrace();
+				}
+			}
+		});
+		btnLeaveRoom.setBounds(10, 525, 87, 23);
+		btnLeaveRoom.setVisible(false);
+		tabPanel.add(btnLeaveRoom);
 		
 		textUsername = new JTextField();
 		textUsername.setToolTipText("pleas enter username");
@@ -245,20 +262,23 @@ public class ChatTabClient extends JPanel {
 				try
 				{
 					cwc.listener.out.writeUTF("(text%"+cwc.username+"%"+room_id+")" + textChat.getText());
+					cwc.listener.out.flush();
 				}
 				catch(Exception ex)
 				{
-					System.out.println(ex);
+					ex.printStackTrace();
 				}
 				textChat.setText(null);				
 			}
 		});		
 		tabPanel.add(textChat);
-		textChat.setEnabled(false);
+		if (room_id == 0)
+			textChat.setEnabled(false);
 		
 		userListUI.setBounds(10, 45, 152, 470);
 		tabPanel.add(userListUI);
 		textPane.setBounds(172, 10, 731, 505);
+		textPane.setEditable(false);
 	    textScroll.setBounds(172, 10, 731, 505);
 	    tabPanel.add(textScroll);
 	    textScroll.setViewportView(textPane);	    	    
@@ -285,6 +305,7 @@ public class ChatTabClient extends JPanel {
 	    btnDisconnect.setEnabled(false);
 	    btnConnect.setVisible(false);
 	    btnDisconnect.setVisible(false);
+		btnLeaveRoom.setVisible(true);
 	    textChat.setEnabled(true);		
 	}
 }

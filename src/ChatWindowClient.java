@@ -3,6 +3,7 @@ import java.io.IOException;
 
 import javax.swing.JFrame;
 
+import java.util.Enumeration;
 import java.util.Hashtable;
 import java.util.Vector;
 import javax.swing.JTabbedPane;
@@ -54,15 +55,13 @@ public class ChatWindowClient {
 		tabbedPane.addTab("Lobby", null, tabs.get(0).tabPanel, null);				
 		tabs.get(0).room_id = 0;
 		//btnClose.addActionListener(myCloseActionHandler);
-		
-		
 	}
 	
 	public void sentNewRoomReq() {	
 		try {
 			listener.out.writeUTF("(OpenRoomRequest)"+username);
+			listener.out.flush();
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 	}
@@ -74,4 +73,26 @@ public class ChatWindowClient {
 		tabbedPane.addTab("Room" + r, null, tabs.get(r).tabPanel, null);
 		tabs.get(r).room_id = r;
 	}
+	
+	public void removeAllTabs()
+	{
+		int numTabs = tabbedPane.getTabCount();
+		for (int i = 1; i < numTabs; ++i)
+			tabbedPane.removeTabAt(1);
+		Vector<Integer> keys = new Vector<Integer>();
+		for (Enumeration<Integer> e = tabs.keys(); e.hasMoreElements();) {
+			int room_id = e.nextElement(); 
+			if (room_id != 0)
+				keys.add(room_id);
+		}
+		for (Enumeration<Integer> e = keys.elements(); e.hasMoreElements();)
+			tabs.remove(e.nextElement());
+	}
+	
+	public void removeTab(int room_id)
+	{
+		tabbedPane.remove(tabs.get(room_id).tabPanel);
+		tabs.remove(room_id);
+	}
+	
 }

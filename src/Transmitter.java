@@ -46,6 +46,7 @@ public class Transmitter extends Thread implements Runnable {
 			long fileSize = new File(filePath + fileName).length();
 			String fileInfo = "(FileInfo)" + fileName + "%" + fileSize + "%";
 			outStream.writeUTF(fileInfo);
+			outStream.flush();
 
 			// 6. transmitter->receiver: file content
 			transmitFile(filePath + fileName, fileSize, outStream);

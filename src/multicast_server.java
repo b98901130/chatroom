@@ -9,6 +9,7 @@ public class multicast_server
 	public Hashtable<String, Hashtable<Socket, DataOutputStream>> ht_rooms = new Hashtable<String, Hashtable<Socket, DataOutputStream>>();
 	public Hashtable<String, UserData> ht_user = new Hashtable<String, UserData>();
 	public int room_index = 0;
+	
 	public multicast_server() throws IOException
 	{
 		try
@@ -31,6 +32,7 @@ public class multicast_server
 				for (Enumeration<String> e = ht_user.keys(); e.hasMoreElements();)
 					userStr += e.nextElement() + "%";
 				out.writeUTF(userStr);
+				out.flush();
 				
 				// update userinfo
 				String username = in.readUTF();
@@ -48,6 +50,7 @@ public class multicast_server
 						out = e.nextElement();
 						try {
 							out.writeUTF("(UserConnected_Room0)" + username);
+							out.flush();
 						}
 						catch (IOException ex) {
 							ex.printStackTrace();
@@ -94,6 +97,7 @@ class ServerThread extends Thread implements Runnable
 			while (true)
 			{
 				String message = in.readUTF();
+				System.out.println("Message received: " + message);
 
 				// for normal Text, broadcast it to everyone in this room
 				if (!isSpecialMsg(message)) {
@@ -101,37 +105,44 @@ class ServerThread extends Thread implements Runnable
 						for(Enumeration<DataOutputStream> e = ht_room.elements(); e.hasMoreElements();) {
 							DataOutputStream out = (DataOutputStream)e.nextElement();
 							out.writeUTF(message);
+							out.flush();
 						}
 					}
 				}
 			}
 		}
-		catch (IOException e) {}
+		catch (EOFException e) {}
+		catch (SocketException e) {}
+		catch (IOException e) { e.printStackTrace(); }
 		finally {
 			synchronized (ht_room) {
-				System.out.println("Remove connection " + userdata.getSocket());
 				ht_room.remove(userdata.getSocket());
 				
 				// broadcast user disconnect message
 				for(Enumeration<DataOutputStream> e = ht_room.elements(); e.hasMoreElements();) {
 					DataOutputStream out = e.nextElement();
 					try {
-						out.writeUTF("(UserDisconnected_Room" + room_id + ")" + userdata.getName()); // need to maintain where the user leave
+						out.writeUTF("(UserDisconnected_Room" + room_id + ")" + userdata.getName());
+						out.flush();
 					}
 					catch (IOException ex) {
 						ex.printStackTrace();
 					}
 				}
-				
+			}
+			
+			if (room_id == 0) {
 				// close connection
+				System.out.println("Remove connection " + userdata.getSocket());
 				try {
 					userdata.getSocket().close();
 				} catch (IOException e) {
 					e.printStackTrace();
 				}
-			}
-			synchronized (master.ht_user) {
-				master.ht_user.remove(userdata.getName());
+				// remove user
+				synchronized (master.ht_user) {
+					master.ht_user.remove(userdata.getName());
+				}
 			}
 		}
 	}
@@ -146,34 +157,56 @@ class ServerThread extends Thread implements Runnable
 			ip = master.ht_user.get(username).getIp();
 			out = new DataOutputStream(userdata.getSocket().getOutputStream());
 			out.writeUTF("(IPReply)" + username + '%' + ip);
+			out.flush();
 			return true;
 		case "(FileRequest)":
 			// 4. server->receiver: (FileRequest)
 			username = msg.substring(msg.indexOf(")") + 1);
 			out = new DataOutputStream(master.ht_user.get(username).getSocket().getOutputStream());
 			out.writeUTF("(FileRequest)");
+			out.flush();
 			return true;
 		case "(OpenRoomRequest)":
 			int newRoomId = ++master.room_index;
 			username = msg.substring(msg.indexOf(")") + 1);
 			out = new DataOutputStream(master.ht_user.get(username).getSocket().getOutputStream());
 			out.writeUTF("(Opened_Room)"+Integer.toString(newRoomId));
-			System.out.println(msg);
+			out.flush();
 			System.out.println("(Opened_Room)"+Integer.toString(newRoomId));
 
 			// create a new hashtable for new room, and insert it into ht_rooms
 			Hashtable<Socket, DataOutputStream> newRoom = new Hashtable<Socket, DataOutputStream>();
-			master.ht_rooms.put("Room" + Integer.toString(newRoomId), newRoom);
-			newRoom.put(userdata.getSocket(), out);
-			Thread thread = new Thread(new ServerThread(master, userdata, newRoomId, newRoom));
-			thread.start();
+			synchronized (master.ht_rooms) {
+				master.ht_rooms.put("Room" + Integer.toString(newRoomId), newRoom);
+			}
 			
 			// broadcast user connect message
 			synchronized (newRoom) {
+				newRoom.put(userdata.getSocket(), out);
+				Thread thread = new Thread(new ServerThread(master, userdata, newRoomId, newRoom));
+				thread.start();
 				for (Enumeration<DataOutputStream> e = newRoom.elements(); e.hasMoreElements();) {
 					out = e.nextElement();
 					try {
 						out.writeUTF("(UserConnected_Room" + Integer.toString(newRoomId) + ")" + username);
+						out.flush();
+					}
+					catch (IOException ex) {
+						ex.printStackTrace();
+					}
+				}
+			}
+			return true;
+		case "(LeaveRoomRequest)":
+			synchronized (ht_room) {
+				ht_room.remove(userdata.getSocket());
+				
+				// broadcast user disconnect message
+				for(Enumeration<DataOutputStream> e = ht_room.elements(); e.hasMoreElements();) {
+					out = e.nextElement();
+					try {
+						out.writeUTF("(UserDisconnected_Room" + room_id + ")" + userdata.getName());
+						out.flush();
 					}
 					catch (IOException ex) {
 						ex.printStackTrace();

@@ -110,6 +110,7 @@ class ServerThread extends Thread implements Runnable
 		finally {
 			synchronized (ht_room) {
 				System.out.println("Remove connection " + socket);
+				ht_room.remove(socket);
 				
 				// broadcast user disconnect message
 				for(Enumeration<DataOutputStream> e = ht_room.elements(); e.hasMoreElements();) {
@@ -123,7 +124,6 @@ class ServerThread extends Thread implements Runnable
 				}
 				
 				// close connection
-				ht_room.remove(socket);
 				try {
 					socket.close();
 				} catch (IOException e) {

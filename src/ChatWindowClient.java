@@ -2,6 +2,8 @@ import java.awt.EventQueue;
 import java.io.IOException;
 
 import javax.swing.JFrame;
+
+import java.util.Hashtable;
 import java.util.Vector;
 import javax.swing.JTabbedPane;
 
@@ -9,7 +11,9 @@ public class ChatWindowClient {
 
 	public JFrame frmLabChatroom;
 	public JTabbedPane tabbedPane;
-	public Vector<ChatTabClient> tabs = new Vector<ChatTabClient>();
+	public Hashtable<Integer, ChatTabClient> tabs = new Hashtable<Integer, ChatTabClient>();
+	public Listener listener;
+	public String username;
 	/**
 	 * Launch the application.
 	 */
@@ -43,29 +47,31 @@ public class ChatWindowClient {
 		frmLabChatroom.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		frmLabChatroom.getContentPane().setLayout(null);
 		
-		tabs.add(new ChatTabClient(this));		
+		tabs.put(0, new ChatTabClient(this, 0));		
 		tabbedPane = new JTabbedPane();
 		tabbedPane.setBounds(0, 0, 965, 630);
-		frmLabChatroom.getContentPane().add(tabbedPane);		
+		frmLabChatroom.getContentPane().add(tabbedPane);	
 		tabbedPane.addTab("Lobby", null, tabs.get(0).tabPanel, null);				
-
+		tabs.get(0).room_id = 0;
 		//btnClose.addActionListener(myCloseActionHandler);
 		
 		
 	}
 	
-	public void sentNewRoomReq() {
-		tabs.add(new ChatTabClient(this));
-		tabs.get(tabs.size()-1).autoConnect(-1, tabs.get(0).username);
+	public void sentNewRoomReq() {	
 		try {
-			tabs.get(tabs.size()-1).listener.out.writeUTF("(OpenRoomRequest%"+tabs.get(tabs.size()-1).listener.user+")");
+			listener.out.writeUTF("(OpenRoomRequest)"+username);
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 	}
 	
-	public void createNewRoom() {		
-		tabbedPane.addTab("Room", null, tabs.get(tabs.size()-1).tabPanel, null);		
+	public void createNewRoom(int r) {
+		System.out.println("start to open tab");
+		tabs.put(r, new ChatTabClient(this, r));
+		tabs.get(r).autoConnect(r);		
+		tabbedPane.addTab("Room", null, tabs.get(r).tabPanel, null);
+		tabs.get(r).room_id = r;
 	}
 }

@@ -2,12 +2,13 @@ import java.net.*;
 import java.io.*;
 import java.util.*;
 
+
 public class multicast_server
 {
 	private static ServerSocket serverSocket;
-	private Hashtable<String, Hashtable<Socket, DataOutputStream>> ht_rooms = new Hashtable<String, Hashtable<Socket, DataOutputStream>>();
-	private Hashtable<String, UserData> ht_user = new Hashtable<String, UserData>();
-
+	public Hashtable<String, Hashtable<Socket, DataOutputStream>> ht_rooms = new Hashtable<String, Hashtable<Socket, DataOutputStream>>();
+	public Hashtable<String, UserData> ht_user = new Hashtable<String, UserData>();
+	public int room_index = 0;
 	public multicast_server() throws IOException
 	{
 		try
@@ -38,7 +39,7 @@ public class multicast_server
 				// put new user into lobby(=room0)
 				Hashtable<Socket, DataOutputStream> lobby = ht_rooms.get("Room0");
 				lobby.put(socket, out);
-				Thread thread = new Thread(new ServerThread(socket, 0, ht_user.get(username), lobby, ht_user));
+				Thread thread = new Thread(new ServerThread(this, socket, ht_user.get(username), lobby));
 				thread.start();
 				
 				// broadcast user connect message
@@ -69,19 +70,17 @@ public class multicast_server
 
 class ServerThread extends Thread implements Runnable
 {
+	private multicast_server master;
 	private Socket socket;
-	private int roomIndex;
 	private UserData userdata;
 	private Hashtable<Socket, DataOutputStream> ht_room;
-	private Hashtable<String, UserData> ht_user;
 
-	public ServerThread(Socket s, int r, UserData u, Hashtable<Socket, DataOutputStream> h, Hashtable<String, UserData> hu)
+	public ServerThread(multicast_server ss, Socket s, UserData u, Hashtable<Socket, DataOutputStream> h)
 	{
+		this.master = ss;
 		this.socket = s;
 		this.userdata = u;
-		this.roomIndex = r;
 		this.ht_room = h;
-		this.ht_user = hu;
 	}
 
 	public void run()
@@ -116,7 +115,7 @@ class ServerThread extends Thread implements Runnable
 				for(Enumeration<DataOutputStream> e = ht_room.elements(); e.hasMoreElements();) {
 					DataOutputStream out = e.nextElement();
 					try {
-						out.writeUTF("(UserDisconnected_Room" + roomIndex + ")" + userdata.getName());
+						out.writeUTF("(UserDisconnected_Room" + 0 + ")" + userdata.getName()); // need to maintain where the user leave
 					}
 					catch (IOException ex) {
 						ex.printStackTrace();
@@ -131,8 +130,8 @@ class ServerThread extends Thread implements Runnable
 					e.printStackTrace();
 				}
 			}
-			synchronized (ht_user) {
-				ht_user.remove(userdata.getName());
+			synchronized (master.ht_user) {
+				master.ht_user.remove(userdata.getName());
 			}
 		}
 	}
@@ -144,15 +143,22 @@ class ServerThread extends Thread implements Runnable
 		switch (header) {
 		case "(IPRequest)":
 			username = msg.substring(msg.indexOf(")") + 1);
-			ip = ht_user.get(username).getIp();
+			ip = master.ht_user.get(username).getIp();
 			out = new DataOutputStream(socket.getOutputStream());
 			out.writeUTF("(IPReply)" + username + '%' + ip);
 			return true;
 		case "(FileRequest)":
 			// 4. server->receiver: (FileRequest)
 			username = msg.substring(msg.indexOf(")") + 1);
-			out = new DataOutputStream(ht_user.get(username).getSocket().getOutputStream());
+			out = new DataOutputStream(master.ht_user.get(username).getSocket().getOutputStream());
 			out.writeUTF("(FileRequest)");
+			return true;
+		case "(OpenRoomRequest)":
+			username = msg.substring(msg.indexOf(")") + 1);
+			out = new DataOutputStream(master.ht_user.get(username).getSocket().getOutputStream());
+			out.writeUTF("(Opened_Room)"+Integer.toString(++master.room_index));
+			System.out.println(msg);
+			System.out.println("(Opened_Room)"+Integer.toString(master.room_index));
 			return true;
 		}
 		

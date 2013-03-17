@@ -21,16 +21,17 @@ import javax.swing.SwingConstants;
 
 public class ChatTabClient extends JPanel {
 	public ChatWindowClient cwc; 
+	public int room_id;
 	public JPanel tabPanel;
 	public JTextField textUsername = new JTextField();;
 	public JTextField textChat = new JTextField();
 	public DefaultListModel<String> userList = new DefaultListModel<String>();
 	public JList userListUI = new JList(userList);
-	public Listener listener;
+
 	public ChatTabClient myself;
 	public JTextPane textPane= new JTextPane();
 	public JScrollPane textScroll = new JScrollPane();	
-	public String username;
+	
 	public JButton btnConnect = new JButton("\u9023\u7DDA");
 	public JButton btnDisconnect = new JButton("\u96E2\u7DDA");
 	public JButton btnWhisper = new JButton("\u6084\u6084\u8A71");
@@ -79,8 +80,9 @@ public class ChatTabClient extends JPanel {
 	/**
 	 * Create the application.
 	 */	
-	public ChatTabClient(ChatWindowClient _cwc) {
+	public ChatTabClient(ChatWindowClient _cwc, int rmid) {
 		cwc = _cwc;
+		room_id = rmid;
 		myself = this;
 		initialize();
 	}
@@ -152,9 +154,9 @@ public class ChatTabClient extends JPanel {
 		btnConnect.setBounds(10, 525, 87, 23);
 		btnConnect.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
-				username = textUsername.getText();
+				cwc.username = textUsername.getText();
 				textUsername.setEditable(false);
-				new Thread(listener = new Listener(myself, 0)).start();
+				new Thread(cwc.listener = new Listener(cwc)).start();
 			    textChat.requestFocus();
 			    btnConnect.setEnabled(false);
 			    btnDisconnect.setEnabled(true);
@@ -169,7 +171,7 @@ public class ChatTabClient extends JPanel {
 		btnDisconnect.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
 				try {
-					listener.socket.close();
+					cwc.listener.socket.close();
 				} catch (IOException e) {
 					e.printStackTrace();
 				}
@@ -187,8 +189,7 @@ public class ChatTabClient extends JPanel {
 		tabPanel.add(btnWhisper);
 		btnChatroom.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
-				cwc.sentNewRoomReq();
-				cwc.createNewRoom();
+				cwc.sentNewRoomReq();				
 			}
 		});
 		btnChatroom.setBounds(335, 525, 104, 23);
@@ -210,10 +211,10 @@ public class ChatTabClient extends JPanel {
 				
 				// 1. transmitter->server: (IPRequest)username
 				String receiver = userListUI.getSelectedValue().toString();
-				if (username.equals(receiver)) return;
+				if (cwc.username.equals(receiver)) return;
 				
 				try {
-					listener.out.writeUTF("(IPRequest)" + receiver);
+					cwc.listener.out.writeUTF("(IPRequest)" + receiver);
 				} catch (IOException e) {
 					e.printStackTrace();
 				}
@@ -234,7 +235,7 @@ public class ChatTabClient extends JPanel {
 			public void actionPerformed(ActionEvent arg0) {			
 				try
 				{
-					listener.out.writeUTF("(text%"+listener.user+"%"+listener.room_id+")" + textChat.getText());
+					cwc.listener.out.writeUTF("(text%"+cwc.username+"%"+room_id+")" + textChat.getText());
 				}
 				catch(Exception ex)
 				{
@@ -266,11 +267,10 @@ public class ChatTabClient extends JPanel {
 		return ma;
 	}
 	
-	public void autoConnect(int r_id, String u_name){
-		username = u_name;
-		textUsername.setText(username);
-		textUsername.setEditable(false);
-		new Thread(listener = new Listener(myself, r_id)).start();
+	public void autoConnect(int r_id){
+		room_id = r_id;
+		textUsername.setText(cwc.username);
+		textUsername.setEditable(false);		
 	    textChat.requestFocus();
 	    btnConnect.setEnabled(false);
 	    btnDisconnect.setEnabled(false);

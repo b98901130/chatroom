@@ -21,12 +21,8 @@ public class ChatWindowClient {
 	public static void main(String[] args) {
 		EventQueue.invokeLater(new Runnable() {
 			public void run() {
-				try {
-					ChatWindowClient window = new ChatWindowClient();
-					window.frmLabChatroom.setVisible(true);
-				} catch (Exception e) {
-					e.printStackTrace();
-				}
+				ChatWindowClient window = new ChatWindowClient();
+				window.frmLabChatroom.setVisible(true);
 			}
 		});
 	}
@@ -74,8 +70,7 @@ public class ChatWindowClient {
 		tabs.get(r).room_id = r;
 	}
 	
-	public void removeAllTabs()
-	{
+	public void removeAllTabs() {
 		int numTabs = tabbedPane.getTabCount();
 		for (int i = 1; i < numTabs; ++i)
 			tabbedPane.removeTabAt(1);
@@ -89,8 +84,7 @@ public class ChatWindowClient {
 			tabs.remove(e.nextElement());
 	}
 	
-	public void removeTab(int room_id)
-	{
+	public void removeTab(int room_id) {
 		tabbedPane.remove(tabs.get(room_id).tabPanel);
 		tabs.remove(room_id);
 	}

@@ -1,16 +1,14 @@
 import java.awt.FileDialog;
 import java.io.BufferedOutputStream;
 import java.io.DataInputStream;
-import java.io.File;
 import java.io.FileOutputStream;
-import java.io.FilenameFilter;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
 
 import javax.swing.JTextPane;
 
-public class Receiver extends Thread implements Runnable {
+public class Receiver implements Runnable {
 	private ServerSocket servsock;
 	private FileDialog fileDialog;
 	private JTextPane textPane;
@@ -38,12 +36,10 @@ public class Receiver extends Thread implements Runnable {
 			DataInputStream inStream = new DataInputStream(socket.getInputStream());
 			
 			// 5. after connection is opened, transmitter should then send "(FileInfo)filename%fileSize%" to receiver
-			String fileInfo = inStream.readUTF(), extension = "";
+			String fileInfo = inStream.readUTF();
 			int fileSize;
 			if (fileInfo.startsWith("(FileInfo)")) {
 				fileName = fileInfo.substring(fileInfo.indexOf(')') + 1, fileInfo.indexOf('%'));
-				if (fileName.lastIndexOf('.') >= 0)
-					extension = fileName.substring(fileName.lastIndexOf('.'));
 				fileSize = Integer.parseInt(fileInfo.substring(fileInfo.indexOf('%') + 1, fileInfo.lastIndexOf('%')));
 			}
 			else {
@@ -52,20 +48,9 @@ public class Receiver extends Thread implements Runnable {
 			}
 			
 			// choose file saving location from fileDialog
-            class ExtFilter implements FilenameFilter {
-            	String extension;
-            	ExtFilter(String ext) {
-            		extension = ext;
-            	}
-                public boolean accept(File dir, String name) {
-                    return (name.endsWith(extension));
-                }
-            };
-            
 			fileDialog.setAutoRequestFocus(true);
 			fileDialog.setLocationByPlatform(true);
 			fileDialog.setLocationRelativeTo(textPane);
-			fileDialog.setFilenameFilter(new ExtFilter(extension));
             fileDialog.setVisible(true);
 			filePath = fileDialog.getDirectory();
 			fileName = fileDialog.getFile();
@@ -79,12 +64,14 @@ public class Receiver extends Thread implements Runnable {
 		}
 		
 		String finishMsg = "System Message> file [" + filePath + fileName + "] received!\n";
+	    textPane.setEditable(true);
 		textPane.setSelectionStart(textPane.getText().length());
 		textPane.setSelectionEnd(textPane.getText().length());				
 		textPane.replaceSelection(finishMsg);
+	    textPane.setEditable(false);
 	}
 	
-	private static void receiveFile(String fileName, int fileSize, DataInputStream inputStream) throws IOException {
+	private void receiveFile(String fileName, int fileSize, DataInputStream inputStream) throws IOException {
 		byte[] fileContent = new byte[200000];
 	    FileOutputStream fos = new FileOutputStream(fileName);
 	    BufferedOutputStream bos = new BufferedOutputStream(fos);

@@ -12,66 +12,61 @@ public class multicast_server
 	
 	public multicast_server() throws IOException
 	{
-		try
+		serverSocket = new ServerSocket(2525);
+		ht_rooms.put("Room0", new Hashtable<Socket, DataOutputStream>());
+		System.out.println("Waiting for client to connect...");
+	}
+	
+	public void run() throws IOException
+	{
+		while (true)
 		{
-			serverSocket = new ServerSocket(2525);
-			ht_rooms.put("Room0", new Hashtable<Socket, DataOutputStream>());
-			System.out.println("Waiting for client to connect...");
+			Socket socket = serverSocket.accept();
+			String ip = socket.getInetAddress().getHostAddress();
+			System.out.println("Connected from client " + ip);
+			
+			DataInputStream in = new DataInputStream(socket.getInputStream());
+			DataOutputStream out = new DataOutputStream(socket.getOutputStream());
+			
+			// send userList to the new user
+			String userStr = "(UserList_Room0)";
+			for (Enumeration<String> e = ht_user.keys(); e.hasMoreElements();)
+				userStr += e.nextElement() + "%";
+			out.writeUTF(userStr);
+			out.flush();
+			
+			// update userinfo
+			String username = in.readUTF();
+			ht_user.put(username, new UserData(username, ip, socket));
 
-			while (true)
-			{
-				Socket socket = serverSocket.accept();
-				String ip = socket.getInetAddress().getHostAddress();
-				System.out.println("Connected from client " + ip);
-				
-				DataInputStream in = new DataInputStream(socket.getInputStream());
-				DataOutputStream out = new DataOutputStream(socket.getOutputStream());
-				
-				// send userList to the new user
-				String userStr = "(UserList_Room0)";
-				for (Enumeration<String> e = ht_user.keys(); e.hasMoreElements();)
-					userStr += e.nextElement() + "%";
-				out.writeUTF(userStr);
-				out.flush();
-				
-				// update userinfo
-				String username = in.readUTF();
-				ht_user.put(username, new UserData(username, ip, socket));
-
-				// put new user into lobby(=room0)
-				Hashtable<Socket, DataOutputStream> lobby = ht_rooms.get("Room0");
-				lobby.put(socket, out);
-				Thread thread = new Thread(new ServerThread(this, ht_user.get(username), 0, lobby));
-				thread.start();
-				
-				// broadcast user connect message
-				synchronized (lobby) {
-					for (Enumeration<DataOutputStream> e = lobby.elements(); e.hasMoreElements();) {
-						out = e.nextElement();
-						try {
-							out.writeUTF("(UserConnected_Room0)" + username);
-							out.flush();
-						}
-						catch (IOException ex) {
-							ex.printStackTrace();
-						}
-					}
+			// put new user into lobby(=room0)
+			Hashtable<Socket, DataOutputStream> lobby = ht_rooms.get("Room0");
+			lobby.put(socket, out);
+			new Thread(new ServerThread(this, ht_user.get(username), 0, lobby)).start();
+			
+			// broadcast user connect message
+			synchronized (lobby) {
+				for (Enumeration<DataOutputStream> e = lobby.elements(); e.hasMoreElements();) {
+					out = e.nextElement();
+					out.writeUTF("(UserConnected_Room0)" + username);
+					out.flush();
 				}
 			}
 		}
-		catch (IOException ex)
-		{
-			ex.printStackTrace();
-		}
 	}
 
-	public static void main(String[] args) throws Exception
+	public static void main(String[] args)
 	{
-		multicast_server s = new multicast_server();
+		try {
+			multicast_server s = new multicast_server();
+			s.run();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 	}
 }
 
-class ServerThread extends Thread implements Runnable
+class ServerThread implements Runnable
 {
 	private multicast_server master;
 	private UserData userdata;
@@ -88,14 +83,19 @@ class ServerThread extends Thread implements Runnable
 
 	public void run()
 	{
-		DataInputStream in;
-
-		try
-		{
-			in = new DataInputStream(userdata.getSocket().getInputStream());
+		try {
+			listen();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
+	
+	private void listen() throws IOException
+	{
+		try {
+			DataInputStream in = new DataInputStream(userdata.getSocket().getInputStream());
 			
-			while (true)
-			{
+			while (true) {
 				String message = in.readUTF();
 				System.out.println("Message received: " + message);
 
@@ -121,27 +121,16 @@ class ServerThread extends Thread implements Runnable
 				// broadcast user disconnect message
 				for(Enumeration<DataOutputStream> e = ht_room.elements(); e.hasMoreElements();) {
 					DataOutputStream out = e.nextElement();
-					try {
-						out.writeUTF("(UserDisconnected_Room" + room_id + ")" + userdata.getName());
-						out.flush();
-					}
-					catch (IOException ex) {
-						ex.printStackTrace();
-					}
+					out.writeUTF("(UserDisconnected_Room" + room_id + ")" + userdata.getName());
+					out.flush();
 				}
 			}
 			
 			if (room_id == 0) {
-				// close connection
 				System.out.println("Remove connection " + userdata.getSocket());
-				try {
-					userdata.getSocket().close();
-				} catch (IOException e) {
-					e.printStackTrace();
-				}
-				// remove user
+				userdata.getSocket().close(); // close connection
 				synchronized (master.ht_user) {
-					master.ht_user.remove(userdata.getName());
+					master.ht_user.remove(userdata.getName()); // remove user
 				}
 			}
 		}
@@ -187,13 +176,8 @@ class ServerThread extends Thread implements Runnable
 				thread.start();
 				for (Enumeration<DataOutputStream> e = newRoom.elements(); e.hasMoreElements();) {
 					out = e.nextElement();
-					try {
-						out.writeUTF("(UserConnected_Room" + Integer.toString(newRoomId) + ")" + username);
-						out.flush();
-					}
-					catch (IOException ex) {
-						ex.printStackTrace();
-					}
+					out.writeUTF("(UserConnected_Room" + Integer.toString(newRoomId) + ")" + username);
+					out.flush();
 				}
 			}
 			return true;
@@ -204,13 +188,8 @@ class ServerThread extends Thread implements Runnable
 				// broadcast user disconnect message
 				for(Enumeration<DataOutputStream> e = ht_room.elements(); e.hasMoreElements();) {
 					out = e.nextElement();
-					try {
-						out.writeUTF("(UserDisconnected_Room" + room_id + ")" + userdata.getName());
-						out.flush();
-					}
-					catch (IOException ex) {
-						ex.printStackTrace();
-					}
+					out.writeUTF("(UserDisconnected_Room" + room_id + ")" + userdata.getName());
+					out.flush();
 				}
 			}
 			return true;

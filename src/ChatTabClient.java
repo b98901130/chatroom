@@ -16,15 +16,16 @@ import javax.swing.JTextPane;
 import javax.swing.ScrollPaneConstants;
 import javax.swing.SwingConstants;
 
-
 public class ChatTabClient extends JPanel {
+
+	private static final long serialVersionUID = 1L;
 	public ChatWindowClient cwc; 
 	public int room_id;
 	public JPanel tabPanel;
 	public JTextField textUsername = new JTextField();
 	public JTextField textChat = new JTextField();
 	public DefaultListModel<String> userList = new DefaultListModel<String>();
-	public JList userListUI = new JList(userList);
+	public JList<String> userListUI = new JList<String>(userList);
 
 	public ChatTabClient myself;
 	public JTextPane textPane = new JTextPane();
@@ -93,7 +94,6 @@ public class ChatTabClient extends JPanel {
 	private void initialize() {
 		tabPanel = new JPanel();		
 		tabPanel.setBounds(100, 100, 931, 633);
-
 		tabPanel.setLayout(null);
 		
 		emoticonPane.setBounds(450, 420, 100, 100);
@@ -236,13 +236,10 @@ public class ChatTabClient extends JPanel {
 		btnLeaveRoom.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {		
 				cwc.removeTab(room_id);
-				try
-				{
+				try	{
 					cwc.listener.out.writeUTF("(LeaveRoomRequest)");
 					cwc.listener.out.flush();
-				}
-				catch(Exception ex)
-				{
+				} catch(Exception ex) {
 					ex.printStackTrace();
 				}
 			}
@@ -259,13 +256,10 @@ public class ChatTabClient extends JPanel {
 		textChat.setBounds(172, 560, 731, 24);				
 		textChat.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {			
-				try
-				{
+				try	{
 					cwc.listener.out.writeUTF("(text%"+cwc.username+"%"+room_id+")" + textChat.getText());
 					cwc.listener.out.flush();
-				}
-				catch(Exception ex)
-				{
+				} catch(Exception ex) {
 					ex.printStackTrace();
 				}
 				textChat.setText(null);				
@@ -284,7 +278,7 @@ public class ChatTabClient extends JPanel {
 	    textScroll.setViewportView(textPane);	    	    
 	}
 	
-	public MouseAdapter emoMouseListener(final String s){
+	public MouseAdapter emoMouseListener(final String s) {
 		MouseAdapter ma = new MouseAdapter() {
 			@Override
 			public void mousePressed(MouseEvent arg0) {
@@ -296,7 +290,7 @@ public class ChatTabClient extends JPanel {
 		return ma;
 	}
 	
-	public void autoConnect(int r_id){
+	public void autoConnect(int r_id) {
 		room_id = r_id;
 		textUsername.setText(cwc.username);
 		textUsername.setEditable(false);		

@@ -10,20 +10,19 @@ import java.util.Vector;
 
 import javax.swing.ImageIcon;
 
-
 class Listener extends Frame implements Runnable
 {
+	
+	private static final long serialVersionUID = 1L;
 	TextField chatInput = new TextField();
 	Socket socket;
 	DataOutputStream out; // client->server
 	DataInputStream in;   // server->client
 	ChatWindowClient cwc;
 
-	public Listener(ChatWindowClient c)
-	{		
+	public Listener(ChatWindowClient c) {		
 		cwc = c; 
-		try
-		{
+		try	{
 			socket = new Socket("127.0.0.1", 2525);
 			out = new DataOutputStream(socket.getOutputStream());
 			in = new DataInputStream(socket.getInputStream());
@@ -42,34 +41,32 @@ class Listener extends Frame implements Runnable
 				cwc.username = "null";
 			out.writeUTF(cwc.username);
 			out.flush();
-		}
-		catch(Exception e)
-		{
+		} catch(IOException e) {
 			e.printStackTrace();
 		}
 	}
 
-
 	public void run()
 	{
-		try
-		{
-			while(true)
-			{				
-				String ReceivedLine = "";
-				try {
-					ReceivedLine = in.readUTF();
-				} catch (SocketException e) {
-					cwc.tabs.get(0).userList.removeAllElements();
-					return;
-				}
-				if (!isSpecialMsg(ReceivedLine))
-					parseAll(ReceivedLine);
-			}			
-		}
-		catch(Exception e)
-		{
+		try	{
+			listen();
+		} catch(IOException e) {
 			e.printStackTrace();
+		}
+	}
+	
+	private void listen() throws IOException {
+		while(true)
+		{				
+			String ReceivedLine = "";
+			try {
+				ReceivedLine = in.readUTF();
+			} catch (SocketException e) {
+				cwc.tabs.get(0).userList.removeAllElements();
+				return;
+			}
+			if (!isSpecialMsg(ReceivedLine))
+				parseAll(ReceivedLine);
 		}
 	}
 	
@@ -83,7 +80,7 @@ class Listener extends Frame implements Runnable
 		}
 	}
 	
-	public void printIcon(int r, String s){
+	public void printIcon(int r, String s) {
 		cwc.tabs.get(r).textPane.setSelectionStart(cwc.tabs.get(r).textPane.getText().length());
 		cwc.tabs.get(r).textPane.setSelectionEnd(cwc.tabs.get(r).textPane.getText().length());		
 		cwc.tabs.get(r).textPane.insertIcon(new ImageIcon(s));
@@ -120,16 +117,13 @@ class Listener extends Frame implements Runnable
             fd.setLocationRelativeTo(cwc.tabs.get(0).tabPanel);
             
             // 5. transmitter->receiver: (FileInfo)filename%fileSize%
-            Thread transThread = new Thread(new Transmitter(ip, fd, cwc.tabs.get(0).textPane));
-            transThread.start();
+            new Thread(new Transmitter(ip, fd, cwc.tabs.get(0).textPane)).start();
 			return true;
 		}
 		else if (header.equals("(FileRequest)")) {
-			// use FileDialog to get filename
-            fd = new FileDialog(cwc.frmLabChatroom, "Save file..", FileDialog.SAVE);
+            fd = new FileDialog(cwc.frmLabChatroom, "Save file..", FileDialog.SAVE); // use FileDialog to get filename
             fd.setLocationRelativeTo(cwc.tabs.get(0).tabPanel);
-            Thread recvThread = new Thread(new Receiver(fd, cwc.tabs.get(0).textPane));
-            recvThread.start();
+            new Thread(new Receiver(fd, cwc.tabs.get(0).textPane)).start();
 			return true;
 		}
 		else if (header.equals("(Opened_Room)")) {
@@ -141,7 +135,7 @@ class Listener extends Frame implements Runnable
 		return false;
 	}
 	
-	public void parseAll(String s){
+	private void parseAll(String s) {
 		if (!s.startsWith("(text"))
 			return;
 		
@@ -178,7 +172,7 @@ class Listener extends Frame implements Runnable
 		printText(r, last);
 	}
 	
-	public IconInfo getIconPos(String s, int b){
+	private IconInfo getIconPos(String s, int b) {
 		Vector<Integer> find = new Vector<Integer>();
 		find.add(s.indexOf("{:)}", b));
 		find.add(s.indexOf("{:(}", b));
@@ -210,7 +204,7 @@ class Listener extends Frame implements Runnable
 		return ret;
 	}
 	
-	public void registerRoom(String u_name){
+	public void registerRoom(String u_name) {
 		
 	}
 }

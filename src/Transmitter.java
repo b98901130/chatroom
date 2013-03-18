@@ -1,5 +1,3 @@
-
-
 import java.awt.FileDialog;
 import java.io.BufferedInputStream;
 import java.io.DataOutputStream;
@@ -7,10 +5,9 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.net.Socket;
-
 import javax.swing.JTextPane;
 
-public class Transmitter extends Thread implements Runnable {
+public class Transmitter implements Runnable {
 	private Socket socket;
 	private FileDialog fileDialog;
 	private JTextPane textPane;
@@ -56,12 +53,14 @@ public class Transmitter extends Thread implements Runnable {
 		}
 		
 		String finishMsg = "System Message> file [" + filePath + fileName + "] transmission OK!\n";
+	    textPane.setEditable(true);
 		textPane.setSelectionStart(textPane.getText().length());
 		textPane.setSelectionEnd(textPane.getText().length());				
 		textPane.replaceSelection(finishMsg);
+	    textPane.setEditable(false);
 	}
 	
-	private static void transmitFile(String fileName, long fileSize, DataOutputStream outStream) throws IOException {
+	private void transmitFile(String fileName, long fileSize, DataOutputStream outStream) throws IOException {
 	    File inFile = new File(fileName);
 	    BufferedInputStream bis = new BufferedInputStream(new FileInputStream(inFile));
 	    

@@ -4,6 +4,7 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.io.IOException;
 
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.DefaultListModel;
 import javax.swing.JButton;
@@ -270,7 +271,10 @@ public class ChatTabClient extends JPanel {
 			public void actionPerformed(ActionEvent arg0) {			
 				try	{
 					cwc.listener.out.writeUTF("(text%"+cwc.username+"%"+room_id+")" + textChat.getText());
-				} catch(Exception ex) {
+				} catch (IOException ex) {
+					cwc.listener.disconnect();
+					JOptionPane.showMessageDialog(cwc.frmLabChatroom, "Server connection error!", "Error", JOptionPane.ERROR_MESSAGE);
+				} catch (Exception ex) {
 					ex.printStackTrace();
 				}
 				textChat.setText(null);				

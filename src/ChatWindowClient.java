@@ -1,11 +1,11 @@
 import java.awt.EventQueue;
 import java.io.IOException;
-
-import javax.swing.JFrame;
-
 import java.util.Enumeration;
 import java.util.Hashtable;
 import java.util.Vector;
+
+import javax.swing.JFrame;
+import javax.swing.JOptionPane;
 import javax.swing.JTabbedPane;
 
 public class ChatWindowClient {
@@ -15,6 +15,8 @@ public class ChatWindowClient {
 	public Hashtable<Integer, ChatTabClient> tabs = new Hashtable<Integer, ChatTabClient>();
 	public Listener listener;
 	public String username;
+	public String server_ip;
+	
 	/**
 	 * Launch the application.
 	 */
@@ -31,13 +33,6 @@ public class ChatWindowClient {
 	 * Create the application.
 	 */
 	public ChatWindowClient() {
-		initialize();
-	}
-
-	/**
-	 * Initialize the contents of the frame.
-	 */
-	private void initialize() {		
 		frmLabChatroom = new JFrame();
 		frmLabChatroom.setTitle("Lab1 Chatroom");
 		frmLabChatroom.setBounds(100, 100, 981, 668);
@@ -50,12 +45,14 @@ public class ChatWindowClient {
 		frmLabChatroom.getContentPane().add(tabbedPane);	
 		tabbedPane.addTab("Lobby", null, tabs.get(0).tabPanel, null);				
 		tabs.get(0).room_id = 0;
-		//btnClose.addActionListener(myCloseActionHandler);
+		
+		while (server_ip == null) 
+			server_ip = JOptionPane.showInputDialog(frmLabChatroom, "Server IP:", "127.0.0.1");
 	}
-	
+
 	public void sentNewRoomReq() {	
 		try {
-			listener.out.writeUTF("(OpenRoomRequest)"+username);
+			listener.out.writeUTF("(OpenRoomRequest)" + username);
 		} catch (IOException e) {
 			e.printStackTrace();
 		}

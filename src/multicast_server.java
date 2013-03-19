@@ -1,7 +1,13 @@
-import java.net.*;
-import java.io.*;
-import java.util.*;
-
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.EOFException;
+import java.io.IOException;
+import java.net.ServerSocket;
+import java.net.Socket;
+import java.net.SocketException;
+import java.util.Enumeration;
+import java.util.Hashtable;
+import java.util.Vector;
 
 public class multicast_server
 {
@@ -36,7 +42,12 @@ public class multicast_server
 			
 			// update userinfo
 			String username = in.readUTF();
-			ht_user.put(username, new UserData(username, ip, socket));
+			if (!ht_user.containsKey(username))
+				ht_user.put(username, new UserData(username, ip, socket));
+			else {
+				out.writeUTF("(UserNameConflict)");
+				continue;
+			}
 
 			// put new user into lobby(=room0)
 			Hashtable<Socket, DataOutputStream> lobby = ht_rooms.get(0);

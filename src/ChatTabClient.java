@@ -1,11 +1,10 @@
-import javax.swing.JPanel;
-
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.io.IOException;
 
+import javax.swing.JPanel;
 import javax.swing.DefaultListModel;
 import javax.swing.JButton;
 import javax.swing.JLabel;
@@ -15,6 +14,10 @@ import javax.swing.JTextField;
 import javax.swing.JTextPane;
 import javax.swing.ScrollPaneConstants;
 import javax.swing.SwingConstants;
+import javax.swing.text.DefaultStyledDocument;
+import javax.swing.text.Style;
+import javax.swing.text.StyleConstants;
+import javax.swing.text.StyleContext;
 
 public class ChatTabClient extends JPanel {
 
@@ -28,7 +31,8 @@ public class ChatTabClient extends JPanel {
 	public JList<String> userListUI = new JList<String>(userList);
 
 	public ChatTabClient myself;
-	public JTextPane textPane = new JTextPane();
+	public StyleContext sc = new StyleContext();
+	public JTextPane textPane = new JTextPane(new DefaultStyledDocument(sc));
 	public JScrollPane textScroll = new JScrollPane();
 	
 	public JButton btnConnect = new JButton("\u9023\u7DDA");
@@ -60,24 +64,11 @@ public class ChatTabClient extends JPanel {
 	private final JButton emo15 = new JButton("");
 	private final JButton emo16 = new JButton("");
 	
+	Style defaultStyle = sc.getStyle(StyleContext.DEFAULT_STYLE);
+	final Style mainStyle = sc.addStyle("MainStyle", defaultStyle);
+	final Style boldStyle = sc.addStyle("BoldStyle", defaultStyle);
+	
 	private final JScrollPane emoticonScroll = new JScrollPane();
-	/**
-	 * Launch the application.
-	 */
-/*	
-	public static void main(String[] args) {
-		EventQueue.invokeLater(new Runnable() {
-			public void run() {
-				try {
-					ChatTabClient tab = new ChatTabClient();
-					tab.tabPanel.setVisible(true);
-				} catch (Exception e) {
-					e.printStackTrace();
-				}
-			}
-		});
-	}
-*/	
 
 	/**
 	 * Create the application.
@@ -147,6 +138,10 @@ public class ChatTabClient extends JPanel {
 		emoticonTable.add(emo15);		
 		emoticonTable.add(emo16);
 		
+		StyleConstants.setBold(boldStyle, true);
+		textPane.addStyle("MainStyle", mainStyle);
+		textPane.addStyle("BoldStyle", boldStyle);
+		
 		JLabel label = new JLabel("\u4F7F\u7528\u8005\u5217\u8868");
 		label.setBounds(10, 10, 152, 25);
 		label.setHorizontalAlignment(SwingConstants.CENTER);
@@ -156,13 +151,13 @@ public class ChatTabClient extends JPanel {
 			public void actionPerformed(ActionEvent arg0) {
 				cwc.username = textUsername.getText();
 				textUsername.setEditable(false);
-				new Thread(cwc.listener = new Listener(cwc)).start();
 			    textChat.requestFocus();
 			    btnConnect.setEnabled(false);
 			    btnDisconnect.setEnabled(true);
 			    btnConnect.setVisible(false);
 			    btnDisconnect.setVisible(true);
 			    textChat.setEnabled(true);
+				new Thread(cwc.listener = new Listener(cwc)).start();
 			}
 		});
 		btnConnect.setBounds(10, 525, 87, 23);
@@ -170,31 +165,28 @@ public class ChatTabClient extends JPanel {
 		
 		btnDisconnect.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
-				try {
-					cwc.listener.socket.close();
-				} catch (IOException e) {
-					e.printStackTrace();
-				}
-				textUsername.setEditable(true);
-				btnConnect.setEnabled(true);
-				btnDisconnect.setEnabled(false);
-			    btnConnect.setVisible(true);
-			    btnDisconnect.setVisible(false);
-			    textChat.setEnabled(false);
-			    textPane.setEditable(true);
-			    textPane.setText("");
-			    textPane.setEditable(false);
-			    cwc.removeAllTabs();
+				cwc.listener.disconnect();
+				cwc.listener = null;
 			}
 		});
 		btnDisconnect.setBounds(10, 525, 87, 23);
 		tabPanel.add(btnDisconnect);
 		
+		btnWhisper.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent arg0) {
+				if (cwc.listener == null || !cwc.listener.isConnected() || userListUI.isSelectionEmpty()) return;
+				String receiver = userListUI.getSelectedValue();
+				if (cwc.username.equals(receiver)) return;
+				
+				// TODO
+			}			
+		});
 		btnWhisper.setBounds(221, 525, 104, 23);
 		tabPanel.add(btnWhisper);
 		
 		btnChatroom.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
+				if (cwc.listener == null || !cwc.listener.isConnected()) return;
 				cwc.sentNewRoomReq();				
 			}
 		});
@@ -202,7 +194,8 @@ public class ChatTabClient extends JPanel {
 		tabPanel.add(btnChatroom);
 		
 		btnEmoticon.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent arg0) {				
+			public void actionPerformed(ActionEvent arg0) {
+				if (cwc.listener == null || !cwc.listener.isConnected()) return;
 				emoticonPane.setVisible(!emoticonPane.isVisible());
 			}
 		});
@@ -214,10 +207,8 @@ public class ChatTabClient extends JPanel {
 		
 		btnTransfer.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
-				if (userListUI.isSelectionEmpty()) return;
-				
-				// 1. transmitter->server: (IPRequest)username
-				String receiver = userListUI.getSelectedValue().toString();
+				if (cwc.listener == null || !cwc.listener.isConnected() || userListUI.isSelectionEmpty()) return;
+				String receiver = userListUI.getSelectedValue();
 				if (cwc.username.equals(receiver)) return;
 				
 				try {
@@ -230,6 +221,15 @@ public class ChatTabClient extends JPanel {
 		btnTransfer.setBounds(677, 525, 104, 23);
 		tabPanel.add(btnTransfer);
 		
+		btnVoice.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent arg0) {
+				if (cwc.listener == null || !cwc.listener.isConnected() || userListUI.isSelectionEmpty()) return;
+				String receiver = userListUI.getSelectedValue();
+				if (cwc.username.equals(receiver)) return;
+				
+				// TODO
+			}			
+		});
 		btnVoice.setBounds(791, 525, 104, 23);
 		tabPanel.add(btnVoice);		
 		
@@ -247,12 +247,21 @@ public class ChatTabClient extends JPanel {
 		btnLeaveRoom.setVisible(false);
 		tabPanel.add(btnLeaveRoom);
 		
+		btnInviteUser.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent arg0) {
+				if (cwc.listener == null || !cwc.listener.isConnected() || userListUI.isSelectionEmpty()) return;
+				String receiver = userListUI.getSelectedValue();
+				if (cwc.username.equals(receiver)) return;
+				
+				// TODO
+			}			
+		});
 		btnInviteUser.setBounds(107, 525, 104, 23);
 		btnInviteUser.setVisible(false);
 		tabPanel.add(btnInviteUser);
 		
 		textUsername = new JTextField();
-		textUsername.setToolTipText("pleas enter username");
+		textUsername.setToolTipText("Please enter username");
 		textUsername.setBounds(10, 558, 152, 26);
 		tabPanel.add(textUsername);
 		textUsername.setColumns(10);

@@ -3,15 +3,17 @@ import java.awt.Frame;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
+import java.net.ConnectException;
 import java.net.Socket;
 import java.net.SocketException;
 import java.util.Vector;
 
 import javax.swing.ImageIcon;
+import javax.swing.JOptionPane;
+import javax.swing.JTextPane;
 
 class Listener extends Frame implements Runnable
 {
-	
 	private static final long serialVersionUID = 1L;
 	Socket socket;
 	DataOutputStream out; // client->server
@@ -21,7 +23,7 @@ class Listener extends Frame implements Runnable
 	public Listener(ChatWindowClient c) {		
 		cwc = c; 
 		try	{
-			socket = new Socket("127.0.0.1", 2525);
+			socket = new Socket(cwc.server_ip, 2525);
 			out = new DataOutputStream(socket.getOutputStream());
 			in = new DataInputStream(socket.getInputStream());
 			
@@ -29,52 +31,79 @@ class Listener extends Frame implements Runnable
 			if (message.startsWith("(UserList)"))
 				parseUserList(message);
 			
-			if (cwc.username.length() == 0)
+			if (cwc.username.length() == 0) {
 				cwc.username = "user_" + socket.getInetAddress().getHostAddress();
+				cwc.tabs.get(0).textUsername.setText(cwc.username);
+			}
 			out.writeUTF(cwc.username);
-		} catch(IOException e) {
+		} catch (ConnectException e) {
+			disconnect();
+			JOptionPane.showMessageDialog(cwc.frmLabChatroom, "Server connection error!", "Error", JOptionPane.ERROR_MESSAGE);
+		} catch (IOException e) {
 			e.printStackTrace();
 		}
 	}
 
 	public void run()
 	{
-		try	{
-			listen();
-		} catch(IOException e) {
-			e.printStackTrace();
+		while(true)
+		{				
+			String receivedLine = "";
+			try {
+				if (in == null) return;
+				receivedLine = in.readUTF();
+				if (!isSpecialMsg(receivedLine))
+					parseAll(receivedLine);
+			} catch (SocketException e) {
+				return;
+			} catch (Exception e) {
+				e.printStackTrace();
+				return;
+			}
 		}
 	}
 	
-	private void listen() throws IOException {
-		while(true)
-		{				
-			String ReceivedLine = "";
-			try {
-				ReceivedLine = in.readUTF();
-			} catch (SocketException e) {
-				cwc.tabs.get(0).userList.removeAllElements();
-				return;
+	public void disconnect() {
+		try {
+			if (socket != null) {
+				socket.close();
+				socket = null;
 			}
-			if (!isSpecialMsg(ReceivedLine))
-				parseAll(ReceivedLine);
+		} catch (IOException e) {
+			e.printStackTrace();
 		}
+		ChatTabClient ctc = cwc.tabs.get(0);
+		ctc.userList.removeAllElements();
+		ctc.textUsername.setEditable(true);
+		ctc.btnConnect.setEnabled(true);
+		ctc.btnDisconnect.setEnabled(false);
+		ctc.btnConnect.setVisible(true);
+		ctc.btnDisconnect.setVisible(false);
+		ctc.textChat.setEnabled(false);
+		ctc.textPane.setEditable(true);
+		ctc.textPane.setText("");
+		ctc.textPane.setEditable(false);
+		cwc.username = "";
+	    cwc.removeAllTabs();
 	}
 	
 	public void printText(int r, String s) {			
 		if (cwc.tabs.get(r) != null) {
-			cwc.tabs.get(r).textPane.setEditable(true);
-			cwc.tabs.get(r).textPane.setSelectionStart(cwc.tabs.get(r).textPane.getText().length());
-			cwc.tabs.get(r).textPane.setSelectionEnd(cwc.tabs.get(r).textPane.getText().length());
-			cwc.tabs.get(r).textPane.replaceSelection(s);
-			cwc.tabs.get(r).textPane.setEditable(false);
+			JTextPane textPane = cwc.tabs.get(r).textPane;
+			textPane.setEditable(true);
+			textPane.setSelectionStart(textPane.getText().length());
+			textPane.setSelectionEnd(textPane.getText().length());
+		    textPane.setCharacterAttributes(textPane.getStyle("MainStyle"), true);
+			textPane.replaceSelection(s);
+			textPane.setEditable(false);
 		}
 	}
 	
 	public void printIcon(int r, String s) {
-		cwc.tabs.get(r).textPane.setSelectionStart(cwc.tabs.get(r).textPane.getText().length());
-		cwc.tabs.get(r).textPane.setSelectionEnd(cwc.tabs.get(r).textPane.getText().length());		
-		cwc.tabs.get(r).textPane.insertIcon(new ImageIcon(s));
+		JTextPane textPane = cwc.tabs.get(r).textPane;
+		textPane.setSelectionStart(textPane.getText().length());
+		textPane.setSelectionEnd(textPane.getText().length());		
+		textPane.insertIcon(new ImageIcon(s));
 	}
 	
 	private boolean isSpecialMsg(String msg) throws IOException {
@@ -116,6 +145,10 @@ class Listener extends Frame implements Runnable
 			room_id = Integer.parseInt(msg.substring(msg.indexOf(")") + 1));
 			cwc.createNewRoom(room_id);
 			return true;
+		case "(UserNameConflict)":
+			disconnect();
+			JOptionPane.showMessageDialog(cwc.frmLabChatroom, "Username has been used!", "Error", JOptionPane.ERROR_MESSAGE);
+			return true;
 		}
 		
 		return false;
@@ -133,11 +166,13 @@ class Listener extends Frame implements Runnable
 		int r = Integer.parseInt(room_str);
 		
 		if (cwc.tabs.get(r) != null){
-			cwc.tabs.get(r).textPane.setEditable(true);	
-			cwc.tabs.get(r).textPane.setSelectionStart(cwc.tabs.get(r).textPane.getText().length());
-			cwc.tabs.get(r).textPane.setSelectionEnd(cwc.tabs.get(r).textPane.getText().length());
-			cwc.tabs.get(r).textPane.replaceSelection(name + ": ");
-			cwc.tabs.get(r).textPane.setEditable(false);
+			JTextPane textPane = cwc.tabs.get(r).textPane;
+			textPane.setEditable(true);	
+			textPane.setSelectionStart(textPane.getText().length());
+			textPane.setSelectionEnd(textPane.getText().length());
+		    textPane.setCharacterAttributes(textPane.getStyle("BoldStyle"), true);
+			textPane.replaceSelection(name + ": ");
+			textPane.setEditable(false);
 		}
 		
 		int begin = offset3+1;
@@ -200,6 +235,10 @@ class Listener extends Frame implements Runnable
 			begin = end + 1;
 			end = userList.indexOf('%', begin);
 		}
+	}
+	
+	public boolean isConnected() {
+		return socket != null;
 	}
 	
 	public void registerRoom(String u_name) {

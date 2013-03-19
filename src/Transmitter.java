@@ -18,7 +18,7 @@ public class Transmitter implements Runnable {
 		 * 2. server->transmitter: (IPReply)IpOfReceiver
 		 * 3. transmitter->server: (FileRequest)username
 		 * 4. server->receiver: (FileRequest)
-		 * 5. transmitter->receiver: (FileInfo)filename%fileSize%
+		 * 5. transmitter->receiver: (FileInfo)filename%fileSize
 		 * 6. transmitter->receiver: file content
 		 */
 		socket = new Socket(ip, 25535);
@@ -33,7 +33,7 @@ public class Transmitter implements Runnable {
 			DataOutputStream outStream = new DataOutputStream(socket.getOutputStream());
 			outStream.flush();
 
-			// 5. transmitter->receiver: (FileInfo)filename%fileSize%
+			// transmitter->receiver: (FileInfo)filename%fileSize
 			fileDialog.setAutoRequestFocus(true);
 			fileDialog.setLocationByPlatform(true);
 			fileDialog.setLocationRelativeTo(textPane);
@@ -41,11 +41,11 @@ public class Transmitter implements Runnable {
 			filePath = fileDialog.getDirectory();
 			fileName = fileDialog.getFile();
 			long fileSize = new File(filePath + fileName).length();
-			String fileInfo = "(FileInfo)" + fileName + "%" + fileSize + "%";
+			String fileInfo = "(FileInfo)" + fileName + "%" + fileSize;
 			outStream.writeUTF(fileInfo);
 			outStream.flush();
 
-			// 6. transmitter->receiver: file content
+			// transmitter->receiver: file content
 			transmitFile(filePath + fileName, fileSize, outStream);
 			socket.close();
 		} catch (IOException e) {

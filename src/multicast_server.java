@@ -8,7 +8,7 @@ public class multicast_server
 	private static ServerSocket serverSocket;
 	public Hashtable<Integer, Hashtable<Socket, DataOutputStream>> ht_rooms = new Hashtable<Integer, Hashtable<Socket, DataOutputStream>>();
 	public Hashtable<String, UserData> ht_user = new Hashtable<String, UserData>();
-	public int room_index = 0;
+	public int roomIndex = 0;
 	
 	public multicast_server() throws IOException
 	{
@@ -29,7 +29,7 @@ public class multicast_server
 			DataOutputStream out = new DataOutputStream(socket.getOutputStream());
 			
 			// send userList to the new user
-			String userStr = "(UserList_Room0)";
+			String userStr = "(UserList)" + 0 + "%";
 			for (Enumeration<String> e = ht_user.keys(); e.hasMoreElements();)
 				userStr += e.nextElement() + "%";
 			out.writeUTF(userStr);
@@ -46,10 +46,8 @@ public class multicast_server
 			
 			// broadcast user connect message
 			synchronized (lobby) {
-				for (Enumeration<DataOutputStream> e = lobby.elements(); e.hasMoreElements();) {
-					out = e.nextElement();
-					out.writeUTF("(UserConnected_Room0)" + username);
-				}
+				for (Enumeration<DataOutputStream> e = lobby.elements(); e.hasMoreElements();)
+					e.nextElement().writeUTF("(UserConnected)" + 0 + "%" + username);
 			}
 		}
 	}
@@ -123,7 +121,7 @@ class ServerThread implements Runnable
 						userdata.leaveRoom(room_id);
 						ht_room.remove(userdata.getSocket());
 						for (Enumeration<DataOutputStream> e = ht_room.elements(); e.hasMoreElements();) {
-							e.nextElement().writeUTF("(UserDisconnected_Room" + room_id + ")" + userdata.getName());
+							e.nextElement().writeUTF("(UserDisconnected)" + room_id + "%" + userdata.getName());
 						}
 						if (ht_room.isEmpty() && room_id != 0)
 							master.ht_rooms.remove(room_id);
@@ -159,11 +157,11 @@ class ServerThread implements Runnable
 			out.writeUTF("(FileRequest)");
 			return true;
 		case "(OpenRoomRequest)":
-			int newRoomId = ++master.room_index;
+			int newRoomId = ++master.roomIndex;
 			username = msg.substring(msg.indexOf(")") + 1);
 			out = new DataOutputStream(master.ht_user.get(username).getSocket().getOutputStream());
 			out.writeUTF("(Opened_Room)"+Integer.toString(newRoomId));
-			out.writeUTF("(UserConnected_Room" + Integer.toString(newRoomId) + ")" + username); // send user connect message
+			out.writeUTF("(UserConnected)" + Integer.toString(newRoomId) + "%" + username); // send user connect message
 			System.out.println("(Opened_Room)"+Integer.toString(newRoomId));
 
 			// create a new hashtable for new room, and insert it into ht_rooms
@@ -187,7 +185,7 @@ class ServerThread implements Runnable
 				ht_room.remove(userdata.getSocket());			
 				// broadcast user disconnect message
 				for(Enumeration<DataOutputStream> e = ht_room.elements(); e.hasMoreElements();)
-					e.nextElement().writeUTF("(UserDisconnected_Room" + room_id + ")" + userdata.getName());
+					e.nextElement().writeUTF("(UserDisconnected)" + room_id + "%" + userdata.getName());
 				if (ht_room.isEmpty() && room_id != 0)
 					master.ht_rooms.remove(room_id);
 			}

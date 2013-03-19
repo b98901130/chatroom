@@ -25,15 +25,9 @@ class Listener extends Frame implements Runnable
 			out = new DataOutputStream(socket.getOutputStream());
 			in = new DataInputStream(socket.getInputStream());
 			
-			String userStr = in.readUTF();
-			if (userStr.startsWith("(UserList_Room0)")) {
-				int begin = userStr.indexOf(')') + 1;
-				while (userStr.indexOf('%', begin) > 0) {
-					cwc.tabs.get(0).userList.addElement(userStr.substring(begin, userStr.indexOf('%', begin)));
-					System.out.println(userStr.substring(begin, userStr.indexOf('%', begin)));
-					begin = userStr.indexOf('%', begin) + 1;
-				}
-			}
+			String message = in.readUTF();
+			if (message.startsWith("(UserList)"))
+				parseUserList(message);
 			
 			if (cwc.username.length() == 0)
 				cwc.username = "user_" + socket.getInetAddress().getHostAddress();
@@ -88,22 +82,20 @@ class Listener extends Frame implements Runnable
 		int room_id;
 		FileDialog fd;
 		
-		if (header.startsWith("(UserConnected_Room")) {
+		switch (header) {
+		case "(UserConnected)":
 			System.out.println(msg);
-			room_id = Integer.parseInt(header.substring(19, header.indexOf(')')));
-			username = msg.substring(msg.indexOf(")") + 1);
+			room_id = Integer.parseInt(msg.substring(msg.indexOf(')') + 1, msg.indexOf('%')));
+			username = msg.substring(msg.indexOf("%") + 1);
 			cwc.tabs.get(room_id).userList.addElement(username);
 			return true;
-		}
-		else if (header.startsWith("(UserDisconnected_Room")) {
-			room_id = Integer.parseInt(header.substring(22, header.indexOf(')')));
-			username = msg.substring(msg.indexOf(")") + 1);
+		case "(UserDisconnected)":
+			room_id = Integer.parseInt(msg.substring(msg.indexOf(')') + 1, msg.indexOf('%')));
+			username = msg.substring(msg.indexOf("%") + 1);
 			cwc.tabs.get(room_id).userList.removeElement(username);
 			return true;
-		}
-		else if (header.equals("(IPReply)")) {
-			// 2. server->transmitter: (IPReply)IpOfReceiver
-			// 3. transmitter->server: (FileRequest)username
+		case "(IPReply)":
+			// transmitter->server: (FileRequest)username
 			username = msg.substring(msg.indexOf(")") + 1, msg.indexOf("%"));
 			ip = msg.substring(msg.indexOf("%") + 1);
 			out.writeUTF("(FileRequest)" + username);
@@ -112,17 +104,15 @@ class Listener extends Frame implements Runnable
             fd = new FileDialog(cwc.frmLabChatroom, "Load file..", FileDialog.LOAD);
             fd.setLocationRelativeTo(cwc.tabs.get(0).tabPanel);
             
-            // 5. transmitter->receiver: (FileInfo)filename%fileSize%
+            // transmitter->receiver: (FileInfo)filename%fileSize
             new Thread(new Transmitter(ip, fd, cwc.tabs.get(0).textPane)).start();
 			return true;
-		}
-		else if (header.equals("(FileRequest)")) {
+		case "(FileRequest)":
             fd = new FileDialog(cwc.frmLabChatroom, "Save file..", FileDialog.SAVE); // use FileDialog to get filename
             fd.setLocationRelativeTo(cwc.tabs.get(0).tabPanel);
             new Thread(new Receiver(fd, cwc.tabs.get(0).textPane)).start();
 			return true;
-		}
-		else if (header.equals("(Opened_Room)")) {
+		case "(Opened_Room)":
 			room_id = Integer.parseInt(msg.substring(msg.indexOf(")") + 1));
 			cwc.createNewRoom(room_id);
 			return true;
@@ -131,9 +121,9 @@ class Listener extends Frame implements Runnable
 		return false;
 	}
 	
-	private void parseAll(String s) {
+	private void parseAll(String s) throws IOException {
 		if (!s.startsWith("(text"))
-			return;
+			throw new IOException("Invalid message: " + s);
 		
 		int offset1 = s.indexOf("%");
 		int offset2 = s.indexOf("%", offset1+1);
@@ -198,6 +188,18 @@ class Listener extends Frame implements Runnable
 			}
 		}
 		return ret;
+	}
+	
+	private void parseUserList(String userList) {
+		int room_id = Integer.parseInt(userList.substring(userList.indexOf(')') + 1, userList.indexOf('%'))),
+			  begin = userList.indexOf('%') + 1,
+				end = userList.indexOf('%', begin);
+		while (end > 0) {
+			cwc.tabs.get(room_id).userList.addElement(userList.substring(begin, end));
+			System.out.println(userList.substring(begin, end));
+			begin = end + 1;
+			end = userList.indexOf('%', begin);
+		}
 	}
 	
 	public void registerRoom(String u_name) {

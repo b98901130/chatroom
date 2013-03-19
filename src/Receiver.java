@@ -19,7 +19,7 @@ public class Receiver implements Runnable {
 		 * 2. server->transmitter: (IPReply)IpOfReceiver
 		 * 3. transmitter->server: (FileRequest)username
 		 * 4. server->receiver: (FileRequest)
-		 * 5. transmitter->receiver: (FileInfo)filename%fileSize%
+		 * 5. transmitter->receiver: (FileInfo)filename%fileSize
 		 * 6. transmitter->receiver: file content
 		 */
 		servsock = new ServerSocket(25535);
@@ -31,16 +31,16 @@ public class Receiver implements Runnable {
 		String filePath = "", fileName = "";
 		
 		try {
-			// 4. after server->receiver: (FileRequest)
+			// after server->receiver: (FileRequest)
 			Socket socket = servsock.accept();
 			DataInputStream inStream = new DataInputStream(socket.getInputStream());
 			
-			// 5. after connection is opened, transmitter should then send "(FileInfo)filename%fileSize%" to receiver
+			// after connection is opened, transmitter should then send "(FileInfo)filename%fileSize" to receiver
 			String fileInfo = inStream.readUTF();
 			int fileSize;
 			if (fileInfo.startsWith("(FileInfo)")) {
 				fileName = fileInfo.substring(fileInfo.indexOf(')') + 1, fileInfo.indexOf('%'));
-				fileSize = Integer.parseInt(fileInfo.substring(fileInfo.indexOf('%') + 1, fileInfo.lastIndexOf('%')));
+				fileSize = Integer.parseInt(fileInfo.substring(fileInfo.indexOf('%') + 1));
 			}
 			else {
 				servsock.close();
@@ -55,7 +55,7 @@ public class Receiver implements Runnable {
 			filePath = fileDialog.getDirectory();
 			fileName = fileDialog.getFile();
 
-			// 6. after file information is received, start listening for file content
+			// after file information is received, start listening for file content
 			receiveFile(filePath + fileName, fileSize, inStream);
 			socket.close();
 			servsock.close();

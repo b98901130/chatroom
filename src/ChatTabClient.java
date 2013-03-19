@@ -38,8 +38,9 @@ public class ChatTabClient extends JPanel {
 	public JButton btnEmoticon = new JButton("\u8868\u60C5\u7B26\u865F");
 	public JButton btnCustom = new JButton("\u6A5F\u5668\u4EBA");
 	public JButton btnTransfer = new JButton("\u50B3\u9001\u6A94\u6848");
-	public JButton btnVoice = new JButton("\u8A9E\u97F3\u901A\u8A71");
-	public JButton btnLeaveRoom = new JButton("\u96E2\u958b");
+	public JButton btnVoice = new JButton("\u8996\u8A0A\u901A\u8A71");
+	public JButton btnLeaveRoom = new JButton("\u96E2\u958B\u623F\u9593");
+	public JButton btnInviteUser = new JButton("\u9080\u8ACB\u4F7F\u7528\u8005");
 	private final JPanel emoticonPane = new JPanel();
 	private final JPanel emoticonTable = new JPanel();
 	private final JButton emo1 = new JButton("");
@@ -221,7 +222,6 @@ public class ChatTabClient extends JPanel {
 				
 				try {
 					cwc.listener.out.writeUTF("(IPRequest)" + receiver);
-					cwc.listener.out.flush();
 				} catch (IOException e) {
 					e.printStackTrace();
 				}
@@ -230,15 +230,14 @@ public class ChatTabClient extends JPanel {
 		btnTransfer.setBounds(677, 525, 104, 23);
 		tabPanel.add(btnTransfer);
 		
-		btnVoice.setBounds(791, 525, 116, 23);
+		btnVoice.setBounds(791, 525, 104, 23);
 		tabPanel.add(btnVoice);		
 		
 		btnLeaveRoom.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {		
 				cwc.removeTab(room_id);
 				try	{
-					cwc.listener.out.writeUTF("(LeaveRoomRequest)");
-					cwc.listener.out.flush();
+					cwc.listener.out.writeUTF("(LeaveRoomRequest)" + room_id);
 				} catch(Exception ex) {
 					ex.printStackTrace();
 				}
@@ -247,6 +246,10 @@ public class ChatTabClient extends JPanel {
 		btnLeaveRoom.setBounds(10, 525, 87, 23);
 		btnLeaveRoom.setVisible(false);
 		tabPanel.add(btnLeaveRoom);
+		
+		btnInviteUser.setBounds(107, 525, 104, 23);
+		btnInviteUser.setVisible(false);
+		tabPanel.add(btnInviteUser);
 		
 		textUsername = new JTextField();
 		textUsername.setToolTipText("pleas enter username");
@@ -258,7 +261,6 @@ public class ChatTabClient extends JPanel {
 			public void actionPerformed(ActionEvent arg0) {			
 				try	{
 					cwc.listener.out.writeUTF("(text%"+cwc.username+"%"+room_id+")" + textChat.getText());
-					cwc.listener.out.flush();
 				} catch(Exception ex) {
 					ex.printStackTrace();
 				}
@@ -299,6 +301,7 @@ public class ChatTabClient extends JPanel {
 	    btnDisconnect.setEnabled(false);
 	    btnConnect.setVisible(false);
 	    btnDisconnect.setVisible(false);
+		btnInviteUser.setVisible(true);
 		btnLeaveRoom.setVisible(true);
 	    textChat.setEnabled(true);		
 	}

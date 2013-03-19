@@ -56,7 +56,6 @@ public class ChatWindowClient {
 	public void sentNewRoomReq() {	
 		try {
 			listener.out.writeUTF("(OpenRoomRequest)"+username);
-			listener.out.flush();
 		} catch (IOException e) {
 			e.printStackTrace();
 		}

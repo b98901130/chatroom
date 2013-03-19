@@ -1,6 +1,5 @@
 import java.awt.FileDialog;
 import java.awt.Frame;
-import java.awt.TextField;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
@@ -14,7 +13,6 @@ class Listener extends Frame implements Runnable
 {
 	
 	private static final long serialVersionUID = 1L;
-	TextField chatInput = new TextField();
 	Socket socket;
 	DataOutputStream out; // client->server
 	DataInputStream in;   // server->client
@@ -38,9 +36,8 @@ class Listener extends Frame implements Runnable
 			}
 			
 			if (cwc.username.length() == 0)
-				cwc.username = "null";
+				cwc.username = "user_" + socket.getInetAddress().getHostAddress();
 			out.writeUTF(cwc.username);
-			out.flush();
 		} catch(IOException e) {
 			e.printStackTrace();
 		}
@@ -110,7 +107,6 @@ class Listener extends Frame implements Runnable
 			username = msg.substring(msg.indexOf(")") + 1, msg.indexOf("%"));
 			ip = msg.substring(msg.indexOf("%") + 1);
 			out.writeUTF("(FileRequest)" + username);
-			out.flush();
 			
 			// use FileDialog to get filename
             fd = new FileDialog(cwc.frmLabChatroom, "Load file..", FileDialog.LOAD);

@@ -120,10 +120,13 @@ class ServerThread implements Runnable
 					int room_id = r.nextElement();
 					Hashtable<Socket, DataOutputStream> ht_room = master.ht_rooms.get(room_id);
 					synchronized (ht_room) {
+						userdata.leaveRoom(room_id);
 						ht_room.remove(userdata.getSocket());
 						for (Enumeration<DataOutputStream> e = ht_room.elements(); e.hasMoreElements();) {
 							e.nextElement().writeUTF("(UserDisconnected_Room" + room_id + ")" + userdata.getName());
 						}
+						if (ht_room.isEmpty() && room_id != 0)
+							master.ht_rooms.remove(room_id);
 					}
 				}
 			}
@@ -160,6 +163,7 @@ class ServerThread implements Runnable
 			username = msg.substring(msg.indexOf(")") + 1);
 			out = new DataOutputStream(master.ht_user.get(username).getSocket().getOutputStream());
 			out.writeUTF("(Opened_Room)"+Integer.toString(newRoomId));
+			out.writeUTF("(UserConnected_Room" + Integer.toString(newRoomId) + ")" + username); // send user connect message
 			System.out.println("(Opened_Room)"+Integer.toString(newRoomId));
 
 			// create a new hashtable for new room, and insert it into ht_rooms
@@ -167,17 +171,14 @@ class ServerThread implements Runnable
 			synchronized (master.ht_rooms) {
 				master.ht_rooms.put(newRoomId, newRoom);
 			}
-			
-			// broadcast user connect message
 			synchronized (newRoom) {
 				newRoom.put(userdata.getSocket(), out);
-				for (Enumeration<DataOutputStream> e = newRoom.elements(); e.hasMoreElements();)
-					e.nextElement().writeUTF("(UserConnected_Room" + Integer.toString(newRoomId) + ")" + username);
 			}
 			return true;
 		case "(LeaveRoomRequest)":
 			Hashtable<Socket, DataOutputStream> ht_room;
 			int room_id = Integer.parseInt(msg.substring(header.indexOf(')') + 1));
+			userdata.leaveRoom(room_id);
 			
 			synchronized (master.ht_rooms) {
 				ht_room = master.ht_rooms.get(room_id);
@@ -187,6 +188,8 @@ class ServerThread implements Runnable
 				// broadcast user disconnect message
 				for(Enumeration<DataOutputStream> e = ht_room.elements(); e.hasMoreElements();)
 					e.nextElement().writeUTF("(UserDisconnected_Room" + room_id + ")" + userdata.getName());
+				if (ht_room.isEmpty() && room_id != 0)
+					master.ht_rooms.remove(room_id);
 			}
 			return true;
 		}
@@ -214,6 +217,6 @@ class UserData {
 	public String getIp() {	return ip; }
 	public Socket getSocket() {	return socket; }
 	public void enterRoom(int room_id) { roomList.add(room_id); }
-	public void leaveRoom(int room_id) { roomList.remove(room_id); }
+	public void leaveRoom(int room_id) { roomList.removeElement(room_id); }
 	public Enumeration<Integer> rooms() { return roomList.elements(); }
 }

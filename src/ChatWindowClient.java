@@ -50,7 +50,7 @@ public class ChatWindowClient {
 		tabs.get(0).room_id = 0;
 	    
 		while (server_ip == null) 
-			server_ip = JOptionPane.showInputDialog(frmLabChatroom, "Server IP:", "127.0.0.1");
+			server_ip = (String)JOptionPane.showInputDialog(frmLabChatroom, "Server IP:", "Lab1 Chatroom", JOptionPane.QUESTION_MESSAGE, null, null, "127.0.0.1");
 	}
 
 	public void sentNewRoomReq() {	

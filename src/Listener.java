@@ -192,7 +192,7 @@ class Listener extends Frame implements Runnable
 				out.writeUTF("(RejectInvitation)" + username);
 			return true;
 		case "(RejectInvitation)":
-			JOptionPane.showMessageDialog(cwc.frmLabChatroom, "\u310f\u310f \u88ab\u6253\u69cd\u60f9", "lol", JOptionPane.INFORMATION_MESSAGE);
+			JOptionPane.showMessageDialog(cwc.frmLabChatroom, "\u88ab\u6253\u69cd\u60f9 \u310f\u310f", "lol", JOptionPane.INFORMATION_MESSAGE);
 			return true;
 		case "(Close_Room)":
 			room_id = Integer.parseInt(message.substring(message.indexOf(")") + 1));

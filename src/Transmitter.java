@@ -54,7 +54,7 @@ public class Transmitter implements Runnable {
 			
 			socket.close();
 		} catch (IOException e) {
-			JOptionPane.showMessageDialog(listener.cwc.frmLabChatroom, "\u310f\u310f \u88ab\u6253\u69cd\u60f9", "lol", JOptionPane.INFORMATION_MESSAGE);
+			JOptionPane.showMessageDialog(listener.cwc.frmLabChatroom, "\u88ab\u6253\u69cd\u60f9 \u310f\u310f", "lol", JOptionPane.INFORMATION_MESSAGE);
 		}
 	}
 	

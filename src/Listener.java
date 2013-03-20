@@ -124,16 +124,12 @@ class Listener extends Frame implements Runnable
 			cwc.tabs.get(room_id).userList.removeElement(username);
 			return true;
 		case "(IPReply)":
-			// transmitter->server: (FileRequest)username
 			username = msg.substring(msg.indexOf(")") + 1, msg.indexOf("%"));
 			ip = msg.substring(msg.indexOf("%") + 1);
-			out.writeUTF("(FileRequest)" + username);
+			out.writeUTF("(FileRequest)" + username); // transmitter->server: (FileRequest)username
 			
-			// use FileDialog to get filename
-            fd = new FileDialog(cwc.frmLabChatroom, "Load file..", FileDialog.LOAD);
+            fd = new FileDialog(cwc.frmLabChatroom, "Load file..", FileDialog.LOAD); // use FileDialog to get filename
             fd.setLocationRelativeTo(cwc.tabs.get(0).tabPanel);
-            
-            // transmitter->receiver: (FileInfo)filename%fileSize
             new Thread(new Transmitter(ip, fd, cwc.tabs.get(0).textPane)).start();
 			return true;
 		case "(FileRequest)":
@@ -237,9 +233,7 @@ class Listener extends Frame implements Runnable
 		}
 	}
 	
-	public boolean isConnected() {
-		return socket != null;
-	}
+	public boolean isConnected() { return socket != null; }
 	
 	public void registerRoom(String u_name) {
 		

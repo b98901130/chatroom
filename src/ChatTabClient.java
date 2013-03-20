@@ -298,7 +298,7 @@ public class ChatTabClient extends JPanel {
 			@Override
 			public void mousePressed(MouseEvent arg0) {
 				textChat.setText(textChat.getText()+s);
-				emoticonScroll.setVisible(false);
+				emoticonPane.setVisible(false);
 				textChat.requestFocus();
 			};
 		}; 

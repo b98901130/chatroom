@@ -6,14 +6,12 @@ import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
 
-import javax.swing.JTextPane;
-
 public class Receiver implements Runnable {
 	private ServerSocket servsock;
 	private FileDialog fileDialog;
-	private JTextPane textPane;
+	private Listener listener;
 	
-	public Receiver(FileDialog fd, JTextPane t) throws IOException {
+	public Receiver(FileDialog fd, Listener l) throws IOException {
 		/* [File transfer protocol]
 		 * 1. transmitter->server: (IPRequest)username
 		 * 2. server->transmitter: (IPReply)IpOfReceiver
@@ -24,7 +22,7 @@ public class Receiver implements Runnable {
 		 */
 		servsock = new ServerSocket(25535);
 		fileDialog = fd;
-		textPane = t;
+		listener = l;
 	}
 	
 	public void run() {
@@ -48,27 +46,24 @@ public class Receiver implements Runnable {
 			}
 			
 			// choose file saving location from fileDialog
-			fileDialog.setAutoRequestFocus(true);
-			fileDialog.setLocationByPlatform(true);
-			fileDialog.setLocationRelativeTo(textPane);
-            fileDialog.setVisible(true);
+		    fileDialog.setVisible(true);
 			filePath = fileDialog.getDirectory();
 			fileName = fileDialog.getFile();
-
-			// after file information is received, start listening for file content
-			receiveFile(filePath + fileName, fileSize, inStream);
+			
+			if (fileName == null) {
+				listener.printText(0, "<System Message> file rejected.\n", "SystemMessage");
+			}
+			else {
+				// after file information is received, start listening for file content
+				receiveFile(filePath + fileName, fileSize, inStream);
+				listener.printText(0, "<System Message> file [" + filePath + fileName + "] received!\n", "SystemMessage");
+			}
+			
 			socket.close();
 			servsock.close();
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-		
-		String finishMsg = "System Message> file [" + filePath + fileName + "] received!\n";
-	    textPane.setEditable(true);
-		textPane.setSelectionStart(textPane.getText().length());
-		textPane.setSelectionEnd(textPane.getText().length());				
-		textPane.replaceSelection(finishMsg);
-	    textPane.setEditable(false);
 	}
 	
 	private void receiveFile(String fileName, int fileSize, DataInputStream inputStream) throws IOException {

@@ -12,14 +12,14 @@ import java.util.Vector;
 public class multicast_server
 {
 	private static ServerSocket serverSocket;
-	public Hashtable<Integer, Hashtable<Socket, DataOutputStream>> ht_rooms = new Hashtable<Integer, Hashtable<Socket, DataOutputStream>>();
+	public Hashtable<Integer, Hashtable<String, DataOutputStream>> ht_rooms = new Hashtable<Integer, Hashtable<String, DataOutputStream>>();
 	public Hashtable<String, UserData> ht_user = new Hashtable<String, UserData>();
 	public int roomIndex = 0;
 	
 	public multicast_server() throws IOException
 	{
 		serverSocket = new ServerSocket(2525);
-		ht_rooms.put(0, new Hashtable<Socket, DataOutputStream>());
+		ht_rooms.put(0, new Hashtable<String, DataOutputStream>());
 		System.out.println("Waiting for client to connect...");
 	}
 	
@@ -34,29 +34,35 @@ public class multicast_server
 			DataInputStream in = new DataInputStream(socket.getInputStream());
 			DataOutputStream out = new DataOutputStream(socket.getOutputStream());
 			
-			// send userList to the new user
-			String userStr = "(UserList)" + 0 + "%";
-			for (Enumeration<String> e = ht_user.keys(); e.hasMoreElements();)
-				userStr += e.nextElement() + "%";
-			out.writeUTF(userStr);
-			
-			// update userinfo
 			String username = in.readUTF();
-			if (!ht_user.containsKey(username))
-				ht_user.put(username, new UserData(username, ip, socket));
-			else {
-				out.writeUTF("(UserNameConflict)");
-				continue;
+			synchronized (ht_user) {
+				// send userList to the new user
+				String userStr = "(UserList)" + 0 + "%";
+				for (Enumeration<String> e = ht_user.keys(); e.hasMoreElements();)
+					userStr += e.nextElement() + "%";
+				out.writeUTF(userStr);
+			
+				// update user database
+				if (!ht_user.containsKey(username))
+					ht_user.put(username, new UserData(username, ip, socket));
+				else {
+					out.writeUTF("(UserNameConflict)");
+					continue;
+				}
+				
+				// start listening
+				ht_user.get(username).enterRoom(0);
+				new Thread(new ServerThread(this, ht_user.get(username))).start();
 			}
 
-			// put new user into lobby(=room0)
-			Hashtable<Socket, DataOutputStream> lobby = ht_rooms.get(0);
-			lobby.put(socket, out);
-			ht_user.get(username).enterRoom(0);
-			new Thread(new ServerThread(this, ht_user.get(username))).start();
+			Hashtable<String, DataOutputStream> lobby;
+			synchronized (ht_rooms) {
+				lobby = ht_rooms.get(0);
+			}
 			
 			// broadcast user connect message
 			synchronized (lobby) {
+				lobby.put(username, out);
 				for (Enumeration<DataOutputStream> e = lobby.elements(); e.hasMoreElements();)
 					e.nextElement().writeUTF("(UserConnected)" + 0 + "%" + username);
 			}
@@ -105,7 +111,7 @@ class ServerThread implements Runnable
 
 				// for normal Text, broadcast it to everyone in this room
 				if (!isSpecialMsg(message)) {
-					Hashtable<Socket, DataOutputStream> ht_room; 
+					Hashtable<String, DataOutputStream> ht_room; 
 					int room_id = Integer.parseInt(message.substring(message.indexOf('%', message.indexOf('%') + 1) + 1, message.indexOf(')')));
 					
 					synchronized (master.ht_rooms) {
@@ -127,10 +133,10 @@ class ServerThread implements Runnable
 			synchronized (master.ht_rooms) {
 				for (Enumeration<Integer> r = userdata.rooms(); r.hasMoreElements();) {
 					int room_id = r.nextElement();
-					Hashtable<Socket, DataOutputStream> ht_room = master.ht_rooms.get(room_id);
+					Hashtable<String, DataOutputStream> ht_room = master.ht_rooms.get(room_id);
 					synchronized (ht_room) {
 						userdata.leaveRoom(room_id);
-						ht_room.remove(userdata.getSocket());
+						ht_room.remove(userdata.getName());
 						for (Enumeration<DataOutputStream> e = ht_room.elements(); e.hasMoreElements();) {
 							e.nextElement().writeUTF("(UserDisconnected)" + room_id + "%" + userdata.getName());
 						}
@@ -151,6 +157,7 @@ class ServerThread implements Runnable
 	private boolean isSpecialMsg(String msg) throws IOException {
 		String header = msg.substring(0, msg.indexOf(")") + 1), username, ip;
 		DataOutputStream out;
+		Hashtable<String, DataOutputStream> ht_room;
 		
 		switch (header) {
 		case "(IPRequest)":
@@ -164,28 +171,28 @@ class ServerThread implements Runnable
 		case "(FileRequest)":
 			// 4. server->receiver: (FileRequest)
 			username = msg.substring(msg.indexOf(")") + 1);
-			out = new DataOutputStream(master.ht_user.get(username).getSocket().getOutputStream());
+			synchronized (master.ht_user) {
+				out = new DataOutputStream(master.ht_user.get(username).getSocket().getOutputStream());
+			}
 			out.writeUTF("(FileRequest)");
 			return true;
 		case "(OpenRoomRequest)":
 			int newRoomId = ++master.roomIndex;
-			username = msg.substring(msg.indexOf(")") + 1);
-			out = new DataOutputStream(master.ht_user.get(username).getSocket().getOutputStream());
+			out = new DataOutputStream(userdata.getSocket().getOutputStream());
 			out.writeUTF("(Opened_Room)"+Integer.toString(newRoomId));
-			out.writeUTF("(UserConnected)" + Integer.toString(newRoomId) + "%" + username); // send user connect message
+			out.writeUTF("(UserConnected)" + Integer.toString(newRoomId) + "%" + userdata.getName()); // send user connect message
 			System.out.println("(Opened_Room)"+Integer.toString(newRoomId));
 
 			// create a new hashtable for new room, and insert it into ht_rooms
-			Hashtable<Socket, DataOutputStream> newRoom = new Hashtable<Socket, DataOutputStream>();
+			ht_room = new Hashtable<String, DataOutputStream>();
 			synchronized (master.ht_rooms) {
-				master.ht_rooms.put(newRoomId, newRoom);
+				master.ht_rooms.put(newRoomId, ht_room);
 			}
-			synchronized (newRoom) {
-				newRoom.put(userdata.getSocket(), out);
+			synchronized (ht_room) {
+				ht_room.put(userdata.getName(), out);
 			}
 			return true;
 		case "(LeaveRoomRequest)":
-			Hashtable<Socket, DataOutputStream> ht_room;
 			int room_id = Integer.parseInt(msg.substring(header.indexOf(')') + 1));
 			userdata.leaveRoom(room_id);
 			
@@ -193,13 +200,53 @@ class ServerThread implements Runnable
 				ht_room = master.ht_rooms.get(room_id);
 			}
 			synchronized (ht_room) {
-				ht_room.remove(userdata.getSocket());			
+				ht_room.remove(userdata.getName());			
 				// broadcast user disconnect message
 				for(Enumeration<DataOutputStream> e = ht_room.elements(); e.hasMoreElements();)
 					e.nextElement().writeUTF("(UserDisconnected)" + room_id + "%" + userdata.getName());
 				if (ht_room.isEmpty() && room_id != 0)
 					master.ht_rooms.remove(room_id);
 			}
+			return true;
+		case "(AddPeopleRequest)":
+			room_id = Integer.parseInt(msg.substring(msg.indexOf(')') + 1, msg.indexOf('%')));
+			username = msg.substring(msg.indexOf("%") + 1);
+			synchronized (master.ht_user) {
+				out = new DataOutputStream(master.ht_user.get(username).getSocket().getOutputStream());
+			}
+			out.writeUTF("(Invite_Room)" + room_id + "%" + userdata.getName());
+			return true;
+		case "(ReceiveInvitation)":
+			room_id = Integer.parseInt(msg.substring(msg.indexOf(')') + 1, msg.indexOf('%')));
+			synchronized (master.ht_rooms) {
+				ht_room = master.ht_rooms.get(room_id);
+			}
+			
+			username = msg.substring(msg.indexOf("%") + 1);
+			synchronized (master.ht_user) {
+				out = new DataOutputStream(master.ht_user.get(username).getSocket().getOutputStream());
+				master.ht_user.get(username).enterRoom(0);
+			}
+			
+			synchronized (ht_room) {
+				// send userList to the new user
+				String userStr = "(UserList)" + room_id + "%";
+				for (Enumeration<String> e = ht_room.keys(); e.hasMoreElements();)
+					userStr += e.nextElement() + "%";
+				out.writeUTF(userStr);
+			
+				// broadcast user connect message
+				ht_room.put(username, out);
+				for (Enumeration<DataOutputStream> e = ht_room.elements(); e.hasMoreElements();)
+					e.nextElement().writeUTF("(UserConnected)" + room_id + "%" + username);
+			}
+			return true;
+		case "(RejectInvitation)":
+			username = msg.substring(msg.indexOf(")") + 1);
+			synchronized (master.ht_user) {
+				out = new DataOutputStream(master.ht_user.get(username).getSocket().getOutputStream());
+			}
+			out.writeUTF("(RejectInvitation)");
 			return true;
 		}
 		

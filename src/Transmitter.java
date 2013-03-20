@@ -5,14 +5,13 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.net.Socket;
-import javax.swing.JTextPane;
 
 public class Transmitter implements Runnable {
 	private Socket socket;
 	private FileDialog fileDialog;
-	private JTextPane textPane;
+	private Listener listener;
 	
-	public Transmitter(String ip, FileDialog fd, JTextPane t) throws IOException {
+	public Transmitter(String ip, FileDialog fd, Listener l) throws IOException {
 		/* [File transfer protocol]
 		 * 1. transmitter->server: (IPRequest)username
 		 * 2. server->transmitter: (IPReply)IpOfReceiver
@@ -23,7 +22,7 @@ public class Transmitter implements Runnable {
 		 */
 		socket = new Socket(ip, 25535);
 		fileDialog = fd;
-		textPane = t;
+		listener = l;
 	}
 	
 	public void run() {
@@ -34,30 +33,27 @@ public class Transmitter implements Runnable {
 			outStream.flush();
 
 			// transmitter->receiver: (FileInfo)filename%fileSize
-			fileDialog.setAutoRequestFocus(true);
-			fileDialog.setLocationByPlatform(true);
-			fileDialog.setLocationRelativeTo(textPane);
-			fileDialog.setVisible(true);
 			filePath = fileDialog.getDirectory();
 			fileName = fileDialog.getFile();
-			long fileSize = new File(filePath + fileName).length();
-			String fileInfo = "(FileInfo)" + fileName + "%" + fileSize;
-			outStream.writeUTF(fileInfo);
-			outStream.flush();
+			
+			if (fileName.length() == 0) {
+				listener.printText(0, "<System Message> transmission cancelled.\n", "SystemMessage");
+			}
+			else {
+				long fileSize = new File(filePath + fileName).length();
+				String fileInfo = "(FileInfo)" + fileName + "%" + fileSize;
+				outStream.writeUTF(fileInfo);
+				outStream.flush();
 
-			// transmitter->receiver: file content
-			transmitFile(filePath + fileName, fileSize, outStream);
+				// transmitter->receiver: file content
+				transmitFile(filePath + fileName, fileSize, outStream);
+				listener.printText(0, "<System Message> file [" + filePath + fileName + "] transmission OK!\n", "SystemMessage");
+			}
+			
 			socket.close();
 		} catch (IOException e) {
-			e.printStackTrace();
+			listener.printText(0, "<System Message> transmission has been rejected.\n", "SystemMessage");
 		}
-		
-		String finishMsg = "System Message> file [" + filePath + fileName + "] transmission OK!\n";
-	    textPane.setEditable(true);
-		textPane.setSelectionStart(textPane.getText().length());
-		textPane.setSelectionEnd(textPane.getText().length());				
-		textPane.replaceSelection(finishMsg);
-	    textPane.setEditable(false);
 	}
 	
 	private void transmitFile(String fileName, long fileSize, DataOutputStream outStream) throws IOException {

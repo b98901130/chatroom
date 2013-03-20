@@ -1,3 +1,4 @@
+import java.awt.Color;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
@@ -45,7 +46,7 @@ public class ChatTabClient extends JPanel {
 	public JButton btnTransfer = new JButton("\u50B3\u9001\u6A94\u6848");
 	public JButton btnVoice = new JButton("\u8996\u8A0A\u901A\u8A71");
 	public JButton btnLeaveRoom = new JButton("\u96E2\u958B\u623F\u9593");
-	public JButton btnInviteUser = new JButton("\u9080\u8ACB\u4F7F\u7528\u8005");
+	public JButton btnInvitation = new JButton("\u9080\u8ACB\u4F7F\u7528\u8005");
 	private final JPanel emoticonPane = new JPanel();
 	private final JPanel emoticonTable = new JPanel();
 	private final JButton emo1 = new JButton("");
@@ -66,8 +67,9 @@ public class ChatTabClient extends JPanel {
 	private final JButton emo16 = new JButton("");
 	
 	Style defaultStyle = sc.getStyle(StyleContext.DEFAULT_STYLE);
-	final Style mainStyle = sc.addStyle("MainStyle", defaultStyle);
-	final Style boldStyle = sc.addStyle("BoldStyle", defaultStyle);
+	final Style mainStyle = sc.addStyle(null, defaultStyle);
+	final Style boldStyle = sc.addStyle(null, defaultStyle);
+	final Style greenStyle = sc.addStyle(null, defaultStyle);
 	
 	private final JScrollPane emoticonScroll = new JScrollPane();
 
@@ -140,8 +142,10 @@ public class ChatTabClient extends JPanel {
 		emoticonTable.add(emo16);
 		
 		StyleConstants.setBold(boldStyle, true);
-		textPane.addStyle("MainStyle", mainStyle);
-		textPane.addStyle("BoldStyle", boldStyle);
+		StyleConstants.setForeground(greenStyle, Color.GRAY);
+		textPane.addStyle("NormalMessage", mainStyle);
+		textPane.addStyle("UserName", boldStyle);
+		textPane.addStyle("SystemMessage", greenStyle);
 		
 		JLabel label = new JLabel("\u4F7F\u7528\u8005\u5217\u8868");
 		label.setBounds(10, 10, 152, 25);
@@ -248,18 +252,27 @@ public class ChatTabClient extends JPanel {
 		btnLeaveRoom.setVisible(false);
 		tabPanel.add(btnLeaveRoom);
 		
-		btnInviteUser.addActionListener(new ActionListener() {
+		btnInvitation.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
-				if (cwc.listener == null || !cwc.listener.isConnected() || userListUI.isSelectionEmpty()) return;
-				String receiver = userListUI.getSelectedValue();
-				if (cwc.username.equals(receiver)) return;
-				
-				// TODO
+				if (cwc.listener == null || !cwc.listener.isConnected()) return;
+				ChatTabClient lobby = cwc.tabs.get(0);
+				String receiver = (String)JOptionPane.showInputDialog(cwc.frmLabChatroom,
+						                                              "Please select a user:",
+						                                              "Invitation",
+						                                              JOptionPane.QUESTION_MESSAGE,
+						                                              null,
+						                                              lobby.userList.toArray(),
+						                                              lobby.userList.firstElement());
+				if (cwc.username.equals(receiver) || userList.contains(receiver)) {
+					JOptionPane.showMessageDialog(cwc.frmLabChatroom, "Please select another user!", "Error", JOptionPane.ERROR_MESSAGE);
+					return;
+				}
+				cwc.listener.sendInvitation(room_id, receiver);
 			}			
 		});
-		btnInviteUser.setBounds(107, 525, 104, 23);
-		btnInviteUser.setVisible(false);
-		tabPanel.add(btnInviteUser);
+		btnInvitation.setBounds(107, 525, 104, 23);
+		btnInvitation.setVisible(false);
+		tabPanel.add(btnInvitation);
 		
 		textUsername = new JTextField();
 		textUsername.setToolTipText("Please enter username");
@@ -290,7 +303,7 @@ public class ChatTabClient extends JPanel {
 		textPane.setEditable(false);
 	    textScroll.setBounds(172, 10, 731, 505);
 	    tabPanel.add(textScroll);
-	    textScroll.setViewportView(textPane);	    	    
+	    textScroll.setViewportView(textPane);	    	
 	}
 	
 	public MouseAdapter emoMouseListener(final String s) {
@@ -314,7 +327,7 @@ public class ChatTabClient extends JPanel {
 	    btnDisconnect.setEnabled(false);
 	    btnConnect.setVisible(false);
 	    btnDisconnect.setVisible(false);
-		btnInviteUser.setVisible(true);
+		btnInvitation.setVisible(true);
 		btnLeaveRoom.setVisible(true);
 	    textChat.setEnabled(true);		
 	}

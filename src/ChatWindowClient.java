@@ -11,6 +11,7 @@ import javax.swing.JTabbedPane;
 public class ChatWindowClient {
 
 	public JFrame frmLabChatroom;
+	public JFrame dialogFrame;
 	public JTabbedPane tabbedPane;
 	public Hashtable<Integer, ChatTabClient> tabs = new Hashtable<Integer, ChatTabClient>();
 	public Listener listener;
@@ -45,25 +46,25 @@ public class ChatWindowClient {
 		frmLabChatroom.getContentPane().add(tabbedPane);	
 		tabbedPane.addTab("Lobby", null, tabs.get(0).tabPanel, null);				
 		tabs.get(0).room_id = 0;
-		
+	    
 		while (server_ip == null) 
 			server_ip = JOptionPane.showInputDialog(frmLabChatroom, "Server IP:", "127.0.0.1");
 	}
 
 	public void sentNewRoomReq() {	
 		try {
-			listener.out.writeUTF("(OpenRoomRequest)" + username);
+			listener.out.writeUTF("(OpenRoomRequest)");
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
 	}
 	
 	public void createNewRoom(int r) {
-		System.out.println("start to open tab");
+		System.out.println("start to open tab" + r);
 		tabs.put(r, new ChatTabClient(this, r));
 		tabs.get(r).autoConnect(r);		
 		tabbedPane.addTab("Room" + r, null, tabs.get(r).tabPanel, null);
-		tabs.get(r).room_id = r;
+		tabbedPane.setSelectedComponent(tabs.get(r).tabPanel);
 	}
 	
 	public void removeAllTabs() {

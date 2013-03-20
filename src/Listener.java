@@ -27,15 +27,15 @@ class Listener extends Frame implements Runnable
 			out = new DataOutputStream(socket.getOutputStream());
 			in = new DataInputStream(socket.getInputStream());
 			
-			String message = in.readUTF();
-			if (message.startsWith("(UserList)"))
-				parseUserList(message);
-			
 			if (cwc.username.length() == 0) {
 				cwc.username = "user_" + socket.getInetAddress().getHostAddress();
 				cwc.tabs.get(0).textUsername.setText(cwc.username);
 			}
 			out.writeUTF(cwc.username);
+			
+			String message = in.readUTF();
+			if (message.startsWith("(UserList)"))
+				parseUserList(message);
 		} catch (ConnectException e) {
 			disconnect();
 			JOptionPane.showMessageDialog(cwc.frmLabChatroom, "Server connection error!", "Error", JOptionPane.ERROR_MESSAGE);
@@ -52,6 +52,7 @@ class Listener extends Frame implements Runnable
 			try {
 				if (in == null) return;
 				receivedLine = in.readUTF();
+				System.out.println("Message received: " + receivedLine);
 				if (!isSpecialMsg(receivedLine))
 					parseAll(receivedLine);
 			} catch (SocketException e) {
@@ -87,13 +88,17 @@ class Listener extends Frame implements Runnable
 	    cwc.removeAllTabs();
 	}
 	
-	public void printText(int r, String s) {			
+	public void printText(int r, String s) {
+		printText(r, s, "NormalMessage");
+	}
+	
+	public void printText(int r, String s, String style) {
 		if (cwc.tabs.get(r) != null) {
 			JTextPane textPane = cwc.tabs.get(r).textPane;
 			textPane.setEditable(true);
 			textPane.setSelectionStart(textPane.getText().length());
 			textPane.setSelectionEnd(textPane.getText().length());
-		    textPane.setCharacterAttributes(textPane.getStyle("MainStyle"), true);
+		    textPane.setCharacterAttributes(textPane.getStyle(style), true);
 			textPane.replaceSelection(s);
 			textPane.setEditable(false);
 		}
@@ -106,44 +111,65 @@ class Listener extends Frame implements Runnable
 		textPane.insertIcon(new ImageIcon(s));
 	}
 	
-	private boolean isSpecialMsg(String msg) throws IOException {
-		String header = msg.substring(0, msg.indexOf(")") + 1), username, ip;
+	private boolean isSpecialMsg(String message) throws IOException {
+		String header = message.substring(0, message.indexOf(")") + 1), username, ip;
 		int room_id;
 		FileDialog fd;
 		
 		switch (header) {
 		case "(UserConnected)":
-			System.out.println(msg);
-			room_id = Integer.parseInt(msg.substring(msg.indexOf(')') + 1, msg.indexOf('%')));
-			username = msg.substring(msg.indexOf("%") + 1);
+			room_id = Integer.parseInt(message.substring(message.indexOf(')') + 1, message.indexOf('%')));
+			username = message.substring(message.indexOf("%") + 1);
 			cwc.tabs.get(room_id).userList.addElement(username);
+			printText(room_id, "<System Message> user [" + username + "] has joined room " + room_id + "!\n", "SystemMessage");
 			return true;
 		case "(UserDisconnected)":
-			room_id = Integer.parseInt(msg.substring(msg.indexOf(')') + 1, msg.indexOf('%')));
-			username = msg.substring(msg.indexOf("%") + 1);
+			room_id = Integer.parseInt(message.substring(message.indexOf(')') + 1, message.indexOf('%')));
+			username = message.substring(message.indexOf("%") + 1);
 			cwc.tabs.get(room_id).userList.removeElement(username);
 			return true;
+		case "(UserList)":
+			parseUserList(message);
+			return true;
 		case "(IPReply)":
-			username = msg.substring(msg.indexOf(")") + 1, msg.indexOf("%"));
-			ip = msg.substring(msg.indexOf("%") + 1);
-			out.writeUTF("(FileRequest)" + username); // transmitter->server: (FileRequest)username
-			
-            fd = new FileDialog(cwc.frmLabChatroom, "Load file..", FileDialog.LOAD); // use FileDialog to get filename
-            fd.setLocationRelativeTo(cwc.tabs.get(0).tabPanel);
-            new Thread(new Transmitter(ip, fd, cwc.tabs.get(0).textPane)).start();
+			username = message.substring(message.indexOf(")") + 1, message.indexOf("%"));
+			ip = message.substring(message.indexOf("%") + 1);
+            fd = new FileDialog(cwc.dialogFrame, "Load file..", FileDialog.LOAD); // use FileDialog to get filename
+			fd.setVisible(true);			
+			if (fd.getFile() == null)
+				printText(0, "<System Message> transmission cancelled.\n", "SystemMessage");
+			else {
+				out.writeUTF("(FileRequest)" + username); // transmitter->server: (FileRequest)username
+				new Thread(new Transmitter(ip, fd, this)).start();
+			}
 			return true;
 		case "(FileRequest)":
-            fd = new FileDialog(cwc.frmLabChatroom, "Save file..", FileDialog.SAVE); // use FileDialog to get filename
-            fd.setLocationRelativeTo(cwc.tabs.get(0).tabPanel);
-            new Thread(new Receiver(fd, cwc.tabs.get(0).textPane)).start();
+			fd = new FileDialog(cwc.dialogFrame, "Save file..", FileDialog.SAVE); // use FileDialog to get filename
+            new Thread(new Receiver(fd, this)).start();
 			return true;
 		case "(Opened_Room)":
-			room_id = Integer.parseInt(msg.substring(msg.indexOf(")") + 1));
+			room_id = Integer.parseInt(message.substring(message.indexOf(")") + 1));
 			cwc.createNewRoom(room_id);
 			return true;
 		case "(UserNameConflict)":
 			disconnect();
 			JOptionPane.showMessageDialog(cwc.frmLabChatroom, "Username has been used!", "Error", JOptionPane.ERROR_MESSAGE);
+			return true;
+		case "(Invite_Room)":
+			room_id = Integer.parseInt(message.substring(message.indexOf(')') + 1, message.indexOf('%')));
+			username = message.substring(message.indexOf("%") + 1);
+			int decision = JOptionPane.showConfirmDialog(cwc.frmLabChatroom,
+					                                     username + " has invited you to join room " + room_id + ",\n" + "是否接受祝福?(y/n)",
+					                                     "Invitation", JOptionPane.YES_NO_OPTION);
+			if (decision == JOptionPane.YES_OPTION) {
+				out.writeUTF("(ReceiveInvitation)" + room_id + "%" + cwc.username);
+				cwc.createNewRoom(room_id);
+			}
+			else
+				out.writeUTF("(RejectInvitation)" + username);
+			return true;
+		case "(RejectInvitation)":
+			JOptionPane.showMessageDialog(cwc.frmLabChatroom, "ㄏㄏ 被打槍惹", "lol", JOptionPane.INFORMATION_MESSAGE);
 			return true;
 		}
 		
@@ -166,7 +192,7 @@ class Listener extends Frame implements Runnable
 			textPane.setEditable(true);	
 			textPane.setSelectionStart(textPane.getText().length());
 			textPane.setSelectionEnd(textPane.getText().length());
-		    textPane.setCharacterAttributes(textPane.getStyle("BoldStyle"), true);
+		    textPane.setCharacterAttributes(textPane.getStyle("UserName"), true);
 			textPane.replaceSelection(name + ": ");
 			textPane.setEditable(false);
 		}
@@ -227,7 +253,6 @@ class Listener extends Frame implements Runnable
 				end = userList.indexOf('%', begin);
 		while (end > 0) {
 			cwc.tabs.get(room_id).userList.addElement(userList.substring(begin, end));
-			System.out.println(userList.substring(begin, end));
 			begin = end + 1;
 			end = userList.indexOf('%', begin);
 		}
@@ -235,8 +260,12 @@ class Listener extends Frame implements Runnable
 	
 	public boolean isConnected() { return socket != null; }
 	
-	public void registerRoom(String u_name) {
-		
+	public void sendInvitation(int room_id, String username) {
+		try {
+			out.writeUTF("(AddPeopleRequest)" + room_id + "%" + username);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 	}
 }
 

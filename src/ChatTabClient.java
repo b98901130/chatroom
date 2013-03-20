@@ -20,6 +20,7 @@ import javax.swing.text.DefaultStyledDocument;
 import javax.swing.text.Style;
 import javax.swing.text.StyleConstants;
 import javax.swing.text.StyleContext;
+import javax.swing.border.EtchedBorder;
 
 public class ChatTabClient extends JPanel {
 
@@ -46,6 +47,7 @@ public class ChatTabClient extends JPanel {
 	public JButton btnTransfer = new JButton("\u50B3\u9001\u6A94\u6848");
 	public JButton btnVoice = new JButton("\u8996\u8A0A\u901A\u8A71");
 	public JButton btnLeaveRoom = new JButton("\u96E2\u958B\u623F\u9593");
+	public JButton btnLeaveWhisper = new JButton("\u96E2\u958B\u5bc6\u8ac7");
 	public JButton btnInvitation = new JButton("\u9080\u8ACB\u4F7F\u7528\u8005");
 	private final JPanel emoticonPane = new JPanel();
 	private final JPanel emoticonTable = new JPanel();
@@ -88,7 +90,7 @@ public class ChatTabClient extends JPanel {
 	 */
 	private void initialize() {
 		tabPanel = new JPanel();		
-		tabPanel.setBounds(100, 100, 931, 633);
+		tabPanel.setBounds(100, 100, 903, 604);
 		tabPanel.setLayout(null);
 		
 		emoticonPane.setBounds(450, 420, 100, 100);
@@ -143,11 +145,13 @@ public class ChatTabClient extends JPanel {
 		
 		StyleConstants.setBold(boldStyle, true);
 		StyleConstants.setForeground(greenStyle, Color.GRAY);
+		textPane.setBorder(null);
 		textPane.addStyle("NormalMessage", mainStyle);
 		textPane.addStyle("UserName", boldStyle);
 		textPane.addStyle("SystemMessage", greenStyle);
 		
 		JLabel label = new JLabel("\u4F7F\u7528\u8005\u5217\u8868");
+		label.setBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null));
 		label.setBounds(10, 10, 152, 25);
 		label.setHorizontalAlignment(SwingConstants.CENTER);
 		tabPanel.add(label);
@@ -183,7 +187,11 @@ public class ChatTabClient extends JPanel {
 				String receiver = userListUI.getSelectedValue();
 				if (cwc.username.equals(receiver)) return;
 				
-				// TODO
+				try {
+					cwc.listener.out.writeUTF("(WhisperRequest)" + receiver);
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
 			}			
 		});
 		btnWhisper.setBounds(221, 525, 104, 23);
@@ -212,9 +220,15 @@ public class ChatTabClient extends JPanel {
 		
 		btnTransfer.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
-				if (cwc.listener == null || !cwc.listener.isConnected() || userListUI.isSelectionEmpty()) return;
-				String receiver = userListUI.getSelectedValue();
-				if (cwc.username.equals(receiver)) return;
+				String receiver = null;
+				if (btnLeaveWhisper.isVisible()) {
+					receiver = cwc.tabbedPane.getTitleAt(cwc.tabbedPane.getSelectedIndex()).substring(5);
+				}
+				else {
+					if (cwc.listener == null || !cwc.listener.isConnected() || userListUI.isSelectionEmpty()) return;
+					receiver = userListUI.getSelectedValue();
+					if (cwc.username.equals(receiver)) return;
+				}
 				
 				try {
 					cwc.listener.out.writeUTF("(IPRequest)" + receiver);
@@ -252,19 +266,33 @@ public class ChatTabClient extends JPanel {
 		btnLeaveRoom.setVisible(false);
 		tabPanel.add(btnLeaveRoom);
 		
+		btnLeaveWhisper.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent arg0) {		
+				try	{
+					cwc.listener.out.writeUTF("(LeaveWhisperRequest)" + room_id);
+				} catch(Exception ex) {
+					ex.printStackTrace();
+				}
+			}
+		});
+		btnLeaveWhisper.setBounds(10, 525, 87, 23);
+		btnLeaveWhisper.setVisible(false);
+		tabPanel.add(btnLeaveWhisper);
+		
 		btnInvitation.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
 				if (cwc.listener == null || !cwc.listener.isConnected()) return;
 				ChatTabClient lobby = cwc.tabs.get(0);
 				String receiver = (String)JOptionPane.showInputDialog(cwc.frmLabChatroom,
-						                                              "Please select a user:",
+						                                              "\u8acb\u9078\u64c7\u9080\u8acb\u5c0d\u8c61\uff1a",
 						                                              "Invitation",
 						                                              JOptionPane.QUESTION_MESSAGE,
 						                                              null,
 						                                              lobby.userList.toArray(),
 						                                              lobby.userList.firstElement());
+				if (receiver == null) return;
 				if (cwc.username.equals(receiver) || userList.contains(receiver)) {
-					JOptionPane.showMessageDialog(cwc.frmLabChatroom, "Please select another user!", "Error", JOptionPane.ERROR_MESSAGE);
+					JOptionPane.showMessageDialog(cwc.frmLabChatroom, "\u8acb\u9078\u64c7\u5176\u4ed6\u4f7f\u7528\u8005\uff01", "Error", JOptionPane.ERROR_MESSAGE);
 					return;
 				}
 				cwc.listener.sendInvitation(room_id, receiver);
@@ -279,14 +307,14 @@ public class ChatTabClient extends JPanel {
 		textUsername.setBounds(10, 558, 152, 26);
 		tabPanel.add(textUsername);
 		textUsername.setColumns(10);
-		textChat.setBounds(172, 560, 731, 24);				
+		textChat.setBounds(172, 560, 724, 24);				
 		textChat.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {			
 				try	{
 					cwc.listener.out.writeUTF("(text%"+cwc.username+"%"+room_id+")" + textChat.getText());
 				} catch (IOException ex) {
 					cwc.listener.disconnect();
-					JOptionPane.showMessageDialog(cwc.frmLabChatroom, "Server connection error!", "Error", JOptionPane.ERROR_MESSAGE);
+					JOptionPane.showMessageDialog(cwc.frmLabChatroom, "\u5931\u53bb\u8207\u4f3a\u670d\u5668\u7684\u9023\u7dda\u3002", "Error", JOptionPane.ERROR_MESSAGE);
 				} catch (Exception ex) {
 					ex.printStackTrace();
 				}
@@ -296,12 +324,14 @@ public class ChatTabClient extends JPanel {
 		tabPanel.add(textChat);
 		if (room_id == 0)
 			textChat.setEnabled(false);
+		userListUI.setBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null));
 		
-		userListUI.setBounds(10, 45, 152, 470);
+		userListUI.setBounds(10, 45, 152, 469);
 		tabPanel.add(userListUI);
 		textPane.setBounds(172, 10, 731, 505);
 		textPane.setEditable(false);
-	    textScroll.setBounds(172, 10, 731, 505);
+	    textScroll.setBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null));
+	    textScroll.setBounds(172, 10, 724, 505);
 	    tabPanel.add(textScroll);
 	    textScroll.setViewportView(textPane);	    	
 	}
@@ -332,4 +362,3 @@ public class ChatTabClient extends JPanel {
 	    textChat.setEnabled(true);		
 	}
 }
-

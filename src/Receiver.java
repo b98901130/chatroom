@@ -6,12 +6,15 @@ import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
 
+import javax.swing.JOptionPane;
+
 public class Receiver implements Runnable {
 	private ServerSocket servsock;
 	private FileDialog fileDialog;
 	private Listener listener;
+	private String transmitter;
 	
-	public Receiver(FileDialog fd, Listener l) throws IOException {
+	public Receiver(String n, FileDialog fd, Listener l) throws IOException {
 		/* [File transfer protocol]
 		 * 1. transmitter->server: (IPRequest)username
 		 * 2. server->transmitter: (IPReply)IpOfReceiver
@@ -23,6 +26,7 @@ public class Receiver implements Runnable {
 		servsock = new ServerSocket(25535);
 		fileDialog = fd;
 		listener = l;
+		transmitter = n;
 	}
 	
 	public void run() {
@@ -45,18 +49,21 @@ public class Receiver implements Runnable {
 				throw new IOException("FileInfo error!");
 			}
 			
-			// choose file saving location from fileDialog
-		    fileDialog.setVisible(true);
-			filePath = fileDialog.getDirectory();
-			fileName = fileDialog.getFile();
-			
-			if (fileName == null) {
-				listener.printText(0, "<System Message> file rejected.\n", "SystemMessage");
-			}
-			else {
-				// after file information is received, start listening for file content
-				receiveFile(filePath + fileName, fileSize, inStream);
-				listener.printText(0, "<System Message> file [" + filePath + fileName + "] received!\n", "SystemMessage");
+			int decision = JOptionPane.showConfirmDialog(listener.cwc.frmLabChatroom,
+					                                     transmitter + " \u50b3\u9001\u6a94\u6848 [" + fileName + "] \u7d66\u4f60\n\u662f\u5426\u63a5\u53d7\u795d\u798f\uff1f(y/n)",
+					                                     "Invitation", JOptionPane.YES_NO_OPTION);
+			if (decision == JOptionPane.YES_OPTION) {
+				fileDialog.setVisible(true); // choose file location via fileDialog
+				filePath = fileDialog.getDirectory();
+				fileName = fileDialog.getFile();
+
+				if (fileName == null) {
+					listener.printText(listener.cwc.getRoomIdOnFocus(), "<\u7cfb\u7d71\u8a0a\u606f> \u5df2\u62d2\u7d55\u6a94\u6848\u3002\n", "SystemMessage");
+				}
+				else {
+					receiveFile(filePath + fileName, fileSize, inStream); // start listening for file content
+					listener.printText(listener.cwc.getRoomIdOnFocus(), "<\u7cfb\u7d71\u8a0a\u606f> \u5df2\u6536\u5230\u6a94\u6848 [" + filePath + fileName + "]\n", "SystemMessage");
+				}
 			}
 			
 			socket.close();

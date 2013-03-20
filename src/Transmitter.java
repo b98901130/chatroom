@@ -6,6 +6,8 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.net.Socket;
 
+import javax.swing.JOptionPane;
+
 public class Transmitter implements Runnable {
 	private Socket socket;
 	private FileDialog fileDialog;
@@ -37,7 +39,7 @@ public class Transmitter implements Runnable {
 			fileName = fileDialog.getFile();
 			
 			if (fileName.length() == 0) {
-				listener.printText(0, "<System Message> transmission cancelled.\n", "SystemMessage");
+				listener.printText(listener.cwc.getRoomIdOnFocus(), "<\u7cfb\u7d71\u8a0a\u606f> \u53d6\u6d88\u50b3\u6a94\u3002\n", "SystemMessage");
 			}
 			else {
 				long fileSize = new File(filePath + fileName).length();
@@ -47,12 +49,12 @@ public class Transmitter implements Runnable {
 
 				// transmitter->receiver: file content
 				transmitFile(filePath + fileName, fileSize, outStream);
-				listener.printText(0, "<System Message> file [" + filePath + fileName + "] transmission OK!\n", "SystemMessage");
+				listener.printText(listener.cwc.getRoomIdOnFocus(), "<\u7cfb\u7d71\u8a0a\u606f> \u6a94\u6848 [" + filePath + fileName + "] \u50b3\u8f38\u6210\u529f\n", "SystemMessage");
 			}
 			
 			socket.close();
 		} catch (IOException e) {
-			listener.printText(0, "<System Message> transmission has been rejected.\n", "SystemMessage");
+			JOptionPane.showMessageDialog(listener.cwc.frmLabChatroom, "\u310f\u310f \u88ab\u6253\u69cd\u60f9", "lol", JOptionPane.INFORMATION_MESSAGE);
 		}
 	}
 	

@@ -2,10 +2,14 @@ import java.awt.FileDialog;
 import java.awt.Frame;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.ConnectException;
 import java.net.Socket;
 import java.net.SocketException;
+import java.util.Random;
+import java.util.Scanner;
 import java.util.Vector;
 
 import javax.swing.ImageIcon;
@@ -28,7 +32,7 @@ class Listener extends Frame implements Runnable
 			in = new DataInputStream(socket.getInputStream());
 			
 			if (cwc.username.length() == 0) {
-				cwc.username = "user_" + socket.getInetAddress().getHostAddress();
+				cwc.username = generateUsername();
 				cwc.tabs.get(0).textUsername.setText(cwc.username);
 			}
 			out.writeUTF(cwc.username);
@@ -38,7 +42,7 @@ class Listener extends Frame implements Runnable
 				parseUserList(message);
 		} catch (ConnectException e) {
 			disconnect();
-			JOptionPane.showMessageDialog(cwc.frmLabChatroom, "Server connection error!", "Error", JOptionPane.ERROR_MESSAGE);
+			JOptionPane.showMessageDialog(cwc.frmLabChatroom, "\u4f3a\u670d\u5668\u9023\u7dda\u5931\u6557\uff01", "Error", JOptionPane.ERROR_MESSAGE);
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -121,47 +125,66 @@ class Listener extends Frame implements Runnable
 			room_id = Integer.parseInt(message.substring(message.indexOf(')') + 1, message.indexOf('%')));
 			username = message.substring(message.indexOf("%") + 1);
 			cwc.tabs.get(room_id).userList.addElement(username);
-			printText(room_id, "<System Message> user [" + username + "] has joined room " + room_id + "!\n", "SystemMessage");
+			printText(room_id, "<\u7cfb\u7d71\u8a0a\u606f> \u4f7f\u7528\u8005 " + username + " \u52a0\u5165\u4e86\u623f\u9593 " + room_id + "\u3002\n", "SystemMessage");
 			return true;
 		case "(UserDisconnected)":
 			room_id = Integer.parseInt(message.substring(message.indexOf(')') + 1, message.indexOf('%')));
 			username = message.substring(message.indexOf("%") + 1);
 			cwc.tabs.get(room_id).userList.removeElement(username);
+			printText(room_id, "<\u7cfb\u7d71\u8a0a\u606f> \u4f7f\u7528\u8005 " + username + " \u96e2\u958b\u4e86\u623f\u9593 " + room_id + "\u3002\n", "SystemMessage");
 			return true;
 		case "(UserList)":
 			parseUserList(message);
 			return true;
 		case "(IPReply)":
-			username = message.substring(message.indexOf(")") + 1, message.indexOf("%"));
-			ip = message.substring(message.indexOf("%") + 1);
-            fd = new FileDialog(cwc.dialogFrame, "Load file..", FileDialog.LOAD); // use FileDialog to get filename
+			username = message.substring(message.indexOf(')') + 1, message.indexOf('%'));
+			ip = message.substring(message.indexOf('%') + 1);
+			fd = new FileDialog(cwc.dialogFrame, "Load file..", FileDialog.LOAD); // use FileDialog to get filename
 			fd.setVisible(true);			
 			if (fd.getFile() == null)
-				printText(0, "<System Message> transmission cancelled.\n", "SystemMessage");
+				printText(cwc.getRoomIdOnFocus(), "<\u7cfb\u7d71\u8a0a\u606f> \u53d6\u6d88\u50b3\u6a94\u3002\n", "SystemMessage");
 			else {
 				out.writeUTF("(FileRequest)" + username); // transmitter->server: (FileRequest)username
 				new Thread(new Transmitter(ip, fd, this)).start();
 			}
 			return true;
+		case "(WhisperRequest)":
+			username = message.substring(message.indexOf(')') + 1);
+			if (JOptionPane.showConfirmDialog(cwc.frmLabChatroom, username + " \u60f3\u8ddf\u4f60\u8b1b\u500b\u6084\u6084\u8a71\u5152", "Whisper", JOptionPane.YES_NO_OPTION) == JOptionPane.YES_OPTION)
+				out.writeUTF("(OpenRoomRequest)" + username);
+			else
+				out.writeUTF("(RejectInvitation)" + username);
+			return true;
 		case "(FileRequest)":
+			username = message.substring(message.indexOf(')') + 1);
 			fd = new FileDialog(cwc.dialogFrame, "Save file..", FileDialog.SAVE); // use FileDialog to get filename
-            new Thread(new Receiver(fd, this)).start();
+            new Thread(new Receiver(username, fd, this)).start();
 			return true;
 		case "(Opened_Room)":
 			room_id = Integer.parseInt(message.substring(message.indexOf(")") + 1));
 			cwc.createNewRoom(room_id);
 			return true;
+		case "(Opened_Whisper)":
+			room_id = Integer.parseInt(message.substring(message.indexOf(")") + 1, message.indexOf('%')));
+			cwc.createNewRoom(room_id);
+			parseUserList(message);
+			if (cwc.tabs.get(room_id).userList.firstElement().equals(cwc.username))
+				cwc.tabbedPane.setTitleAt(cwc.tabbedPane.getSelectedIndex(), "with " + cwc.tabs.get(room_id).userList.lastElement());
+			else
+				cwc.tabbedPane.setTitleAt(cwc.tabbedPane.getSelectedIndex(), "with " + cwc.tabs.get(room_id).userList.firstElement());
+			cwc.tabs.get(room_id).btnLeaveRoom.setVisible(false);
+			cwc.tabs.get(room_id).btnInvitation.setVisible(false);
+			cwc.tabs.get(room_id).btnWhisper.setVisible(false);
+			cwc.tabs.get(room_id).btnLeaveWhisper.setVisible(true);
+			return true;
 		case "(UserNameConflict)":
 			disconnect();
-			JOptionPane.showMessageDialog(cwc.frmLabChatroom, "Username has been used!", "Error", JOptionPane.ERROR_MESSAGE);
+			JOptionPane.showMessageDialog(cwc.frmLabChatroom, "\u5df2\u6709\u76f8\u540c\u540d\u7a31\u4f7f\u7528\u8005\u767b\u5165\uff01", "Error", JOptionPane.ERROR_MESSAGE);
 			return true;
 		case "(Invite_Room)":
 			room_id = Integer.parseInt(message.substring(message.indexOf(')') + 1, message.indexOf('%')));
 			username = message.substring(message.indexOf("%") + 1);
-			int decision = JOptionPane.showConfirmDialog(cwc.frmLabChatroom,
-					                                     username + " has invited you to join room " + room_id + ",\n" + "是否接受祝福?(y/n)",
-					                                     "Invitation", JOptionPane.YES_NO_OPTION);
-			if (decision == JOptionPane.YES_OPTION) {
+			if (JOptionPane.showConfirmDialog(cwc.frmLabChatroom, username + " \u9080\u8acb\u4f60\u52a0\u5165\u623f\u9593 " + room_id + "\n\u662f\u5426\u63a5\u53d7\u795d\u798f\uff1f(y/n)", "Invitation", JOptionPane.YES_NO_OPTION) == JOptionPane.YES_OPTION) {
 				out.writeUTF("(ReceiveInvitation)" + room_id + "%" + cwc.username);
 				cwc.createNewRoom(room_id);
 			}
@@ -169,7 +192,11 @@ class Listener extends Frame implements Runnable
 				out.writeUTF("(RejectInvitation)" + username);
 			return true;
 		case "(RejectInvitation)":
-			JOptionPane.showMessageDialog(cwc.frmLabChatroom, "ㄏㄏ 被打槍惹", "lol", JOptionPane.INFORMATION_MESSAGE);
+			JOptionPane.showMessageDialog(cwc.frmLabChatroom, "\u310f\u310f \u88ab\u6253\u69cd\u60f9", "lol", JOptionPane.INFORMATION_MESSAGE);
+			return true;
+		case "(Close_Room)":
+			room_id = Integer.parseInt(message.substring(message.indexOf(")") + 1));
+			cwc.removeTab(room_id);
 			return true;
 		}
 		
@@ -267,7 +294,20 @@ class Listener extends Frame implements Runnable
 			e.printStackTrace();
 		}
 	}
+	
+	private String generateUsername() {
+		Random rng = new Random();
+		Scanner sc = null;
+		try {
+			sc = new Scanner(new FileInputStream("username.txt"));
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+		}
+		String ret = sc.nextLine();
+		for (int i = 0, limit = rng.nextInt(20000); i < limit; ++i)
+			ret = sc.nextLine();
+		sc.close();
+		return ret;
+	}
 }
-
-
 

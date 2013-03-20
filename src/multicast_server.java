@@ -158,6 +158,7 @@ class ServerThread implements Runnable
 		String header = msg.substring(0, msg.indexOf(")") + 1), username, ip;
 		DataOutputStream out;
 		Hashtable<String, DataOutputStream> ht_room;
+		int room_id;
 		
 		switch (header) {
 		case "(IPRequest)":
@@ -166,34 +167,48 @@ class ServerThread implements Runnable
 				ip = master.ht_user.get(username).getIp();
 			}
 			out = new DataOutputStream(userdata.getSocket().getOutputStream());
-			out.writeUTF("(IPReply)" + username + '%' + ip);
+			out.writeUTF("(IPReply)" + username + "%" + ip);
 			return true;
+		case "(WhisperRequest)":
 		case "(FileRequest)":
-			// 4. server->receiver: (FileRequest)
 			username = msg.substring(msg.indexOf(")") + 1);
 			synchronized (master.ht_user) {
 				out = new DataOutputStream(master.ht_user.get(username).getSocket().getOutputStream());
 			}
-			out.writeUTF("(FileRequest)");
+			out.writeUTF(header + userdata.getName());
 			return true;
 		case "(OpenRoomRequest)":
-			int newRoomId = ++master.roomIndex;
+			room_id = ++master.roomIndex;
 			out = new DataOutputStream(userdata.getSocket().getOutputStream());
-			out.writeUTF("(Opened_Room)"+Integer.toString(newRoomId));
-			out.writeUTF("(UserConnected)" + Integer.toString(newRoomId) + "%" + userdata.getName()); // send user connect message
-			System.out.println("(Opened_Room)"+Integer.toString(newRoomId));
+			System.out.println("(Opened_Room)" + Integer.toString(room_id));
 
-			// create a new hashtable for new room, and insert it into ht_rooms
-			ht_room = new Hashtable<String, DataOutputStream>();
+			ht_room = new Hashtable<String, DataOutputStream>(); // create a new hashtable for new room, and insert it into ht_rooms
 			synchronized (master.ht_rooms) {
-				master.ht_rooms.put(newRoomId, ht_room);
+				master.ht_rooms.put(room_id, ht_room);
 			}
 			synchronized (ht_room) {
 				ht_room.put(userdata.getName(), out);
+				userdata.enterRoom(room_id);
+				
+				username = msg.substring(msg.indexOf(")") + 1);
+				String replyMsg = "(Opened_Room)" + Integer.toString(room_id);
+				if (!username.isEmpty()) {
+					synchronized (master.ht_user) {
+						ht_room.put(username, new DataOutputStream(master.ht_user.get(username).getSocket().getOutputStream()));
+						master.ht_user.get(username).enterRoom(room_id);
+					}
+					replyMsg = "(Opened_Whisper)" + room_id + "%";
+					for (Enumeration<String> e = ht_room.keys(); e.hasMoreElements();)
+						replyMsg += e.nextElement() + "%";
+				}
+				for (Enumeration<DataOutputStream> e = ht_room.elements(); e.hasMoreElements();)
+					e.nextElement().writeUTF(replyMsg);
+				if (username.isEmpty())
+					out.writeUTF("(UserConnected)" + room_id + "%" + userdata.getName());
 			}
 			return true;
 		case "(LeaveRoomRequest)":
-			int room_id = Integer.parseInt(msg.substring(header.indexOf(')') + 1));
+			room_id = Integer.parseInt(msg.substring(header.indexOf(')') + 1));
 			userdata.leaveRoom(room_id);
 			
 			synchronized (master.ht_rooms) {
@@ -202,10 +217,25 @@ class ServerThread implements Runnable
 			synchronized (ht_room) {
 				ht_room.remove(userdata.getName());			
 				// broadcast user disconnect message
-				for(Enumeration<DataOutputStream> e = ht_room.elements(); e.hasMoreElements();)
+				for (Enumeration<DataOutputStream> e = ht_room.elements(); e.hasMoreElements();)
 					e.nextElement().writeUTF("(UserDisconnected)" + room_id + "%" + userdata.getName());
 				if (ht_room.isEmpty() && room_id != 0)
 					master.ht_rooms.remove(room_id);
+			}
+			return true;
+		case "(LeaveWhisperRequest)":
+			room_id = Integer.parseInt(msg.substring(header.indexOf(')') + 1));
+			synchronized (master.ht_rooms) {
+				ht_room = master.ht_rooms.get(room_id);
+			}
+			synchronized (ht_room) {
+				for (Enumeration<DataOutputStream> e = ht_room.elements(); e.hasMoreElements();)
+					e.nextElement().writeUTF("(Close_Room)" + room_id);
+				synchronized (master.ht_user) {
+					for (Enumeration<String> e = ht_room.keys(); e.hasMoreElements();)
+						master.ht_user.get(e.nextElement()).leaveRoom(room_id);
+				}
+				master.ht_rooms.remove(room_id);
 			}
 			return true;
 		case "(AddPeopleRequest)":
@@ -225,7 +255,7 @@ class ServerThread implements Runnable
 			username = msg.substring(msg.indexOf("%") + 1);
 			synchronized (master.ht_user) {
 				out = new DataOutputStream(master.ht_user.get(username).getSocket().getOutputStream());
-				master.ht_user.get(username).enterRoom(0);
+				master.ht_user.get(username).enterRoom(room_id);
 			}
 			
 			synchronized (ht_room) {

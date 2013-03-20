@@ -7,12 +7,14 @@ import java.util.Vector;
 import javax.swing.JFrame;
 import javax.swing.JOptionPane;
 import javax.swing.JTabbedPane;
+import javax.swing.BoxLayout;
 
 public class ChatWindowClient {
 
 	public JFrame frmLabChatroom;
 	public JFrame dialogFrame;
 	public JTabbedPane tabbedPane;
+	public ChatTabClient tabOnFocus;
 	public Hashtable<Integer, ChatTabClient> tabs = new Hashtable<Integer, ChatTabClient>();
 	public Listener listener;
 	public String username;
@@ -35,14 +37,14 @@ public class ChatWindowClient {
 	 */
 	public ChatWindowClient() {
 		frmLabChatroom = new JFrame();
+		frmLabChatroom.setResizable(false);
 		frmLabChatroom.setTitle("Lab1 Chatroom");
-		frmLabChatroom.setBounds(100, 100, 981, 668);
+		frmLabChatroom.setBounds(100, 100, 929, 658);
 		frmLabChatroom.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		frmLabChatroom.getContentPane().setLayout(null);
 		
 		tabs.put(0, new ChatTabClient(this, 0));		
+		frmLabChatroom.getContentPane().setLayout(new BoxLayout(frmLabChatroom.getContentPane(), BoxLayout.X_AXIS));
 		tabbedPane = new JTabbedPane();
-		tabbedPane.setBounds(0, 0, 965, 630);
 		frmLabChatroom.getContentPane().add(tabbedPane);	
 		tabbedPane.addTab("Lobby", null, tabs.get(0).tabPanel, null);				
 		tabs.get(0).room_id = 0;
@@ -65,6 +67,7 @@ public class ChatWindowClient {
 		tabs.get(r).autoConnect(r);		
 		tabbedPane.addTab("Room" + r, null, tabs.get(r).tabPanel, null);
 		tabbedPane.setSelectedComponent(tabs.get(r).tabPanel);
+		tabbedPane.getSelectedComponent().setName(Integer.toString(r));
 	}
 	
 	public void removeAllTabs() {
@@ -84,6 +87,10 @@ public class ChatWindowClient {
 	public void removeTab(int room_id) {
 		tabbedPane.remove(tabs.get(room_id).tabPanel);
 		tabs.remove(room_id);
+	}
+	
+	public int getRoomIdOnFocus() {
+		return Integer.parseInt(tabbedPane.getSelectedComponent().getName());
 	}
 	
 }

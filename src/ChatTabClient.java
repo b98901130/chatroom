@@ -34,6 +34,7 @@ public class ChatTabClient extends JPanel {
 	public JTextField textChat = new JTextField();
 	public DefaultListModel<String> userList = new DefaultListModel<String>();
 	public JList<String> userListUI = new JList<String>(userList);
+	public JLabel profilePicLabel = new JLabel("");
 
 	public ChatTabClient myself;
 	public StyleContext sc = new StyleContext();
@@ -217,7 +218,7 @@ public class ChatTabClient extends JPanel {
 		
 		JLabel label = new JLabel("\u4F7F\u7528\u8005\u5217\u8868");
 		label.setBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null));
-		label.setBounds(10, 10, 152, 25);
+		label.setBounds(11, 10, 150, 25);
 		label.setHorizontalAlignment(SwingConstants.CENTER);
 		tabPanel.add(label);
 		
@@ -369,10 +370,10 @@ public class ChatTabClient extends JPanel {
 		
 		textUsername = new JTextField();
 		textUsername.setToolTipText("Please enter username");
-		textUsername.setBounds(10, 558, 152, 26);
+		textUsername.setBounds(10, 562, 150, 25);
 		tabPanel.add(textUsername);
 		textUsername.setColumns(10);
-		textChat.setBounds(172, 560, 724, 24);				
+		textChat.setBounds(172, 562, 724, 25);				
 		textChat.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {			
 				try	{
@@ -391,14 +392,20 @@ public class ChatTabClient extends JPanel {
 			textChat.setEnabled(false);
 		userListUI.setBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null));
 		
-		userListUI.setBounds(10, 45, 152, 469);
+		userListUI.setBounds(11, 44, 150, 300);
 		tabPanel.add(userListUI);
 		textPane.setBounds(172, 10, 731, 505);
 		textPane.setEditable(false);
 	    textScroll.setBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null));
-	    textScroll.setBounds(172, 10, 724, 505);
+	    textScroll.setBounds(172, 10, 724, 501);
 	    tabPanel.add(textScroll);
 	    textScroll.setViewportView(textPane);	    	
+	    
+	    profilePicLabel.setForeground(Color.WHITE);
+	    profilePicLabel.setBackground(Color.WHITE);
+	    profilePicLabel.setBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null));
+	    profilePicLabel.setBounds(11, 361, 150, 150);
+	    tabPanel.add(profilePicLabel);
 	}
 	
 	public MouseAdapter emoMouseListener(final String s) {

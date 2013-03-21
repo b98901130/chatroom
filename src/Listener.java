@@ -1,20 +1,20 @@
 import java.awt.FileDialog;
 import java.awt.Frame;
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.net.ConnectException;
-import java.net.Socket;
-import java.net.SocketException;
+import java.awt.image.BufferedImage;
+import java.io.*;
+import java.net.*;
+import java.util.Arrays;
 import java.util.Random;
 import java.util.Scanner;
 import java.util.Vector;
 
+import javax.imageio.IIOException;
+import javax.imageio.ImageIO;
 import javax.swing.ImageIcon;
 import javax.swing.JOptionPane;
 import javax.swing.JTextPane;
+
+import org.json.simple.*;
 
 class Listener extends Frame implements Runnable
 {
@@ -36,6 +36,7 @@ class Listener extends Frame implements Runnable
 				cwc.tabs.get(0).textUsername.setText(cwc.username);
 			}
 			out.writeUTF(cwc.username);
+			setProfilePic();
 			
 			String message = in.readUTF();
 			if (message.startsWith("(UserList)"))
@@ -89,6 +90,7 @@ class Listener extends Frame implements Runnable
 		ctc.textPane.setText("");
 		ctc.textPane.setEditable(false);
 		cwc.username = "";
+		cwc.tabs.get(0).profilePicLabel.setIcon(null);
 	    cwc.removeAllTabs();
 	}
 	
@@ -308,6 +310,45 @@ class Listener extends Frame implements Runnable
 			ret = sc.nextLine();
 		sc.close();
 		return ret;
+	}
+	
+	private void setProfilePic() throws IOException {
+		// image search query via Google Image API
+		String url = "http://ajax.googleapis.com/ajax/services/search/images?v=1.0&q=" + URLEncoder.encode(cwc.username, "UTF-8");
+		BufferedReader in = new BufferedReader(new InputStreamReader(new URL(url).openStream(), "UTF-8"));
+		String json_result = in.readLine();
+		
+		// parse JSON to get image url
+		JSONObject json_obj = (JSONObject)JSONValue.parse(json_result);
+		json_obj = (JSONObject)json_obj.get("responseData");
+		JSONArray json_array = (JSONArray)json_obj.get("results");
+		
+		url = "http://image.kmt.org.tw/people/20090606164842.jpg";
+		for (int i = 0; i < json_array.size(); ++i) {
+			json_obj = (JSONObject)json_array.get(i);
+			if (Integer.parseInt((String)json_obj.get("width")) > 300 || Integer.parseInt((String)json_obj.get("height")) > 300) continue;
+			url = (String)json_obj.get("url");
+			if (isValidImageExt(url.substring(url.lastIndexOf('.') + 1))) break;
+		}
+			
+		// set image from url
+		BufferedImage img_scaled = new BufferedImage(150, 150, BufferedImage.TYPE_INT_ARGB), img = null;
+		try {
+			img = ImageIO.read(new URL(url));
+		} catch (IIOException e) {
+			System.out.println(url);
+			e.printStackTrace();
+			return;
+		}
+		img_scaled.createGraphics().drawImage(img, 0, 0, 150, 150, null);
+		for (int i = 0; i < 5; ++i)
+			img_scaled.createGraphics().drawImage(img_scaled, 0, 0, 150, 150, null); // draw multiple times to increase image quality
+		cwc.tabs.get(0).profilePicLabel.setIcon(new ImageIcon(img_scaled));
+	}
+	
+	private boolean isValidImageExt(String ext) {
+		String[] validExts = {"jpg", "gif", "png", "JPG", "GIF", "PNG"};
+		return Arrays.asList(validExts).contains(ext);
 	}
 }
 

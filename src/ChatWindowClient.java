@@ -48,6 +48,7 @@ public class ChatWindowClient {
 		frmLabChatroom.getContentPane().add(tabbedPane);	
 		tabbedPane.addTab("Lobby", null, tabs.get(0).tabPanel, null);				
 		tabs.get(0).room_id = 0;
+		tabbedPane.getSelectedComponent().setName("0");
 	    
 		while (server_ip == null) 
 			server_ip = (String)JOptionPane.showInputDialog(frmLabChatroom, "Server IP:", "Lab1 Chatroom", JOptionPane.QUESTION_MESSAGE, null, null, "127.0.0.1");

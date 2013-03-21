@@ -233,7 +233,7 @@ class Listener extends Frame implements Runnable
 			cut = s.substring(begin, end);
 			printText(r, cut);
 			printIcon(r, getIcon.name);
-			begin = end+4;
+			begin = end+7;
 			if (begin >= s.length())
 				break;
 			getIcon = getIconPos(s, begin);
@@ -244,9 +244,22 @@ class Listener extends Frame implements Runnable
 	
 	private IconInfo getIconPos(String s, int b) {
 		Vector<Integer> find = new Vector<Integer>();
-		find.add(s.indexOf("{:)}", b));
-		find.add(s.indexOf("{:(}", b));
-		find.add(s.indexOf("{:D}", b));
+		find.add(s.indexOf("{emo01}", b));
+		find.add(s.indexOf("{emo02}", b));
+		find.add(s.indexOf("{emo03}", b));
+		find.add(s.indexOf("{emo04}", b));
+		find.add(s.indexOf("{emo05}", b));
+		find.add(s.indexOf("{emo06}", b));
+		find.add(s.indexOf("{emo07}", b));
+		find.add(s.indexOf("{emo08}", b));
+		find.add(s.indexOf("{emo09}", b));
+		find.add(s.indexOf("{emo10}", b));
+		find.add(s.indexOf("{emo11}", b));
+		find.add(s.indexOf("{emo12}", b));
+		find.add(s.indexOf("{emo13}", b));
+		find.add(s.indexOf("{emo14}", b));
+		find.add(s.indexOf("{emo15}", b));
+		find.add(s.indexOf("{emo16}", b));		
 		int min = 10000;
 		int min_index = 0;
 		for (int i = 0; i < find.size(); i++){
@@ -260,14 +273,53 @@ class Listener extends Frame implements Runnable
 			if (find.get(min_index) != -1){
 				switch (min_index){
 					case 0:
-						ret = new IconInfo("tusky.gif", find.get(min_index));
+						ret = new IconInfo("images/1.png", find.get(min_index));
 						break;
 					case 1:
-						ret = new IconInfo("2.png", find.get(min_index));
+						ret = new IconInfo("images/2.png", find.get(min_index));
 						break;
 					case 2:
-						ret = new IconInfo("3.png", find.get(min_index));
+						ret = new IconInfo("images/3.png", find.get(min_index));
 						break;
+					case 3:
+						ret = new IconInfo("images/4.png", find.get(min_index));
+						break;
+					case 4:
+						ret = new IconInfo("images/5.png", find.get(min_index));
+						break;
+					case 5:
+						ret = new IconInfo("images/6.png", find.get(min_index));
+						break;
+					case 6:
+						ret = new IconInfo("images/7.png", find.get(min_index));
+						break;
+					case 7:
+						ret = new IconInfo("images/8.png", find.get(min_index));
+						break;
+					case 8:
+						ret = new IconInfo("images/9.png", find.get(min_index));
+						break;
+					case 9:
+						ret = new IconInfo("images/10.png", find.get(min_index));
+						break;
+					case 10:
+						ret = new IconInfo("images/11.png", find.get(min_index));
+						break;
+					case 11:
+						ret = new IconInfo("images/12.png", find.get(min_index));
+						break;
+					case 12:
+						ret = new IconInfo("images/13.png", find.get(min_index));
+						break;
+					case 13:
+						ret = new IconInfo("images/14.png", find.get(min_index));
+						break;
+					case 14:
+						ret = new IconInfo("images/15.png", find.get(min_index));
+						break;
+					case 15:
+						ret = new IconInfo("images/16.png", find.get(min_index));
+						break;						
 				}
 			}
 		}

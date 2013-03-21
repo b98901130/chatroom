@@ -9,6 +9,8 @@ import javax.swing.JFrame;
 import javax.swing.JOptionPane;
 import javax.swing.JTabbedPane;
 import javax.swing.BoxLayout;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
 
 public class ChatWindowClient {
 
@@ -51,6 +53,16 @@ public class ChatWindowClient {
 		tabbedPane.addTab("Lobby", null, tabs.get(0).tabPanel, null);				
 		tabs.get(0).room_id = 0;
 		tabbedPane.getSelectedComponent().setName("0");
+		
+		// disable text input when robot mode is activated
+		class myChangeListener implements ChangeListener {
+			private ChatWindowClient master;
+			public myChangeListener(ChatWindowClient cwt) { this.master = cwt; }
+			public void stateChanged(ChangeEvent e) {
+		    	master.tabs.get(master.getRoomIdOnFocus()).textChat.setEnabled(!master.listener.robotMode);
+			}
+		};
+		tabbedPane.addChangeListener(new myChangeListener(this));
 	    
 		while (server_ip == null) 
 			server_ip = (String)JOptionPane.showInputDialog(frmLabChatroom, "Server IP:", "Lab1 Chatroom", JOptionPane.QUESTION_MESSAGE, null, null, "127.0.0.1");

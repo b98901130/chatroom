@@ -60,8 +60,16 @@ class Listener extends Frame implements Runnable
 				if (in == null) return;
 				receivedLine = in.readUTF();
 				System.out.println("Message received: " + receivedLine);
-				if (!isSpecialMsg(receivedLine))
+				if (!isSpecialMsg(receivedLine)) {
 					parseAll(receivedLine);
+					if (robotMode) {
+						int room_id = Integer.parseInt(receivedLine.substring(receivedLine.indexOf('%', receivedLine.indexOf('%') + 1) + 1, receivedLine.indexOf(')')));
+						String response = "(text%" + cwc.username + "%" + room_id + ")" + getRobotText(receivedLine.substring(receivedLine.indexOf(')') + 1)); 
+						out.writeUTF(response);
+						receivedLine = in.readUTF();
+						parseAll(receivedLine);
+					}
+				}
 			} catch (SocketException e) {
 				return;
 			} catch (Exception e) {
@@ -267,12 +275,8 @@ class Listener extends Frame implements Runnable
 				break;
 			getIcon = getIconPos(s, begin);
 		}
-		String last = s.substring(begin)+"\n";
+		String last = s.substring(begin) + "\n";
 		printText(r, last);
-		
-		if (robotMode) {
-			//printText(r, getRobotText());
-		}
 	}
 	
 	private IconInfo getIconPos(String s, int b) {
@@ -380,6 +384,30 @@ class Listener extends Frame implements Runnable
 		}
 	}
 	
+	private String getRobotText(String message) throws IOException {
+		// add random delay
+		try {
+			Thread.sleep((int)(2000 * Math.random() + 1000));
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
+		
+		String url = "http://sandbox.api.simsimi.com/request.p?key=4636d53c-f01f-469e-86d3-74d0a19c26d8&lc=zh&ft=1.0&text=" + URLEncoder.encode(message, "UTF-8");
+		BufferedReader in = new BufferedReader(new InputStreamReader(new URL(url).openStream(), "UTF-8"));
+		String json_result = in.readLine();
+		
+		JSONObject json_obj = (JSONObject)JSONValue.parse(json_result);
+		if ((Long)json_obj.get("result") == 100)
+			return (String)json_obj.get("response");
+		else {
+			// if API daily limit exceeded
+			Random rand = new Random();
+			String[] randomText = {"", "嗯嗯", "呵呵", "哈哈", "喔喔", "?", "恩恩", "是喔", "ㄏㄏ", "蛤"};
+			String[] randomFace = {"", "^^", "><", ":目", "?", "~", "XD", "QQ"};
+			return randomText[rand.nextInt(randomText.length)] + randomFace[rand.nextInt(randomFace.length)];
+		}
+	}
+	
 	private String generateUsername() {
 		Random rng = new Random();
 		Scanner sc = null;
@@ -398,43 +426,47 @@ class Listener extends Frame implements Runnable
 	private void setProfilePic() throws IOException {
 		// image search query via Google Image API
 		String url = "http://ajax.googleapis.com/ajax/services/search/images?v=1.0&imgtype=face&rsz=8&q=" + URLEncoder.encode(cwc.username, "UTF-8");
-		BufferedReader in = new BufferedReader(new InputStreamReader(new URL(url).openStream(), "UTF-8"));
-		String json_result = in.readLine();
+		BufferedReader in;
+		JSONObject json_obj;
+		JSONArray json_array = null;
 		
 		// parse JSON to get image url
-		JSONObject json_obj = (JSONObject)JSONValue.parse(json_result);
+		in = new BufferedReader(new InputStreamReader(new URL(url).openStream(), "UTF-8"));
+		json_obj = (JSONObject)JSONValue.parse(in.readLine());
 		json_obj = (JSONObject)json_obj.get("responseData");
-		JSONArray json_array = (JSONArray)json_obj.get("results");
+		if (json_obj != null)
+			json_array = (JSONArray)json_obj.get("results");
 		
 		// set image from url
 		BufferedImage img_scaled = new BufferedImage(150, 150, BufferedImage.TYPE_INT_ARGB), img = null;
-		url = "http://image.kmt.org.tw/people/20090606164842.jpg";
-		for (int i = 0; i < json_array.size(); ++i) {
-			json_obj = (JSONObject)json_array.get(i);
-			url = (String)json_obj.get("url");
-			if (isValidImageExt(url.substring(url.lastIndexOf('.') + 1))) {
-				try {
-					img = ImageIO.read(new URL(url));
-				} catch (IIOException e) {
-					img = null;
+		if (json_array != null)
+			for (int i = 0; i < json_array.size(); ++i) {
+				json_obj = (JSONObject)json_array.get(i);
+				if (Integer.parseInt((String)json_obj.get("width")) > 768 || Integer.parseInt((String)json_obj.get("height")) > 768 ||
+					Integer.parseInt((String)json_obj.get("width")) < 100 || Integer.parseInt((String)json_obj.get("height")) < 100)
 					continue;
-				}			
-				break;
+				url = (String)json_obj.get("url");
+				if (isValidImageExt(url.substring(url.lastIndexOf('.') + 1))) {
+					try {
+						img = ImageIO.read(new URL(url));
+					} catch (IIOException e) {
+						img = null;
+						continue;
+					}			
+					break;
+				}
 			}
-		}
 		
 		if (img == null)
 			img = ImageIO.read(new URL("http://image.kmt.org.tw/people/20090606164842.jpg"));
 			
 		img_scaled.createGraphics().drawImage(img, 0, 0, 150, 150, null);
-		for (int i = 0; i < 10; ++i)
-			img_scaled.createGraphics().drawImage(img_scaled, 0, 0, 150, 150, null); // draw multiple times to increase image quality
 		cwc.userIcon = new ImageIcon(img_scaled);
 		cwc.tabs.get(0).profilePicLabel.setIcon(cwc.userIcon);
 	}
 	
 	private boolean isValidImageExt(String ext) {
-		String[] validExts = {"jpg", "gif", "png", "JPG", "GIF", "PNG"};
+		String[] validExts = {"bmp", "jpg", "gif", "png", "BMP", "JPG", "GIF", "PNG"};
 		return Arrays.asList(validExts).contains(ext);
 	}
 }

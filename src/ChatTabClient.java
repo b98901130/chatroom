@@ -284,7 +284,9 @@ public class ChatTabClient extends JPanel {
 		btnRobot.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
 				if (cwc.listener == null || !cwc.listener.isConnected()) return;
-				cwc.listener.robotMode = !cwc.listener.robotMode;  
+				cwc.listener.robotMode = !cwc.listener.robotMode;
+				cwc.tabs.get(0).textChat.setEnabled(!cwc.listener.robotMode);
+				cwc.listener.printText(room_id, "<\u7cfb\u7d71\u8a0a\u606f> \u81ea\u52d5\u56de\u8a71\u6a21\u5f0f" + (cwc.listener.robotMode? "\u958b\u555f": "\u95dc\u9589") + "\u3002\n", "SystemMessage");
 			}
 		});
 		btnRobot.setBounds(563, 525, 104, 23);

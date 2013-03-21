@@ -46,7 +46,7 @@ public class ChatTabClient extends JPanel {
 	public JButton btnWhisper = new JButton("\u6084\u6084\u8A71");
 	public JButton btnChatroom = new JButton("\u6703\u5BA2\u5BA4");
 	public JButton btnEmoticon = new JButton("\u8868\u60C5\u7B26\u865F");
-	public JButton btnCustom = new JButton("\u6A5F\u5668\u4EBA");
+	public JButton btnRobot = new JButton("\u6A5F\u5668\u4EBA");
 	public JButton btnTransfer = new JButton("\u50B3\u9001\u6A94\u6848");
 	public JButton btnVoice = new JButton("\u8996\u8A0A\u901A\u8A71");
 	public JButton btnLeaveRoom = new JButton("\u96E2\u958B\u623F\u9593");
@@ -281,8 +281,14 @@ public class ChatTabClient extends JPanel {
 		btnEmoticon.setBounds(449, 525, 104, 23);
 		tabPanel.add(btnEmoticon);						
 		
-		btnCustom.setBounds(563, 525, 104, 23);
-		tabPanel.add(btnCustom);				
+		btnRobot.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent arg0) {
+				if (cwc.listener == null || !cwc.listener.isConnected()) return;
+				cwc.listener.robotMode = !cwc.listener.robotMode;  
+			}
+		});
+		btnRobot.setBounds(563, 525, 104, 23);
+		tabPanel.add(btnRobot);				
 		
 		btnTransfer.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
@@ -425,6 +431,7 @@ public class ChatTabClient extends JPanel {
 	
 	public void autoConnect(int r_id) {
 		room_id = r_id;
+		profilePicLabel.setIcon(cwc.userIcon);
 		textUsername.setText(cwc.username);
 		textUsername.setEditable(false);		
 	    textChat.requestFocus();

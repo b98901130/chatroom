@@ -23,6 +23,7 @@ class Listener extends Frame implements Runnable
 	DataOutputStream out; // client->server
 	DataInputStream in;   // server->client
 	ChatWindowClient cwc;
+	boolean robotMode = false;	
 	VideoChat v;
 
 	public Listener(ChatWindowClient c) {		
@@ -123,7 +124,7 @@ class Listener extends Frame implements Runnable
 		int room_id;
 		FileDialog fd;
 		String transmitterName, transmitterInfo, receiverInfo;
-				
+		
 		switch (header) {
 		case "(UserConnected)":
 			room_id = Integer.parseInt(message.substring(message.indexOf(')') + 1, message.indexOf('%')));
@@ -188,7 +189,7 @@ class Listener extends Frame implements Runnable
 		case "(Invite_Room)":
 			room_id = Integer.parseInt(message.substring(message.indexOf(')') + 1, message.indexOf('%')));
 			username = message.substring(message.indexOf("%") + 1);
-			if (JOptionPane.showConfirmDialog(cwc.frmLabChatroom, username + " \u9080\u8acb\u4f60\u52a0\u5165\u623f\u9593 " + room_id + "\n\u662f\u5426\u63a5\u53d7\u795d\u798f\uff1f(y/n)", "Invitation", JOptionPane.YES_NO_OPTION) == JOptionPane.YES_OPTION) {
+			if (JOptionPane.showConfirmDialog(cwc.frmLabChatroom, username + " \u60f3\u8ddf\u4f60\u958b\u623f\u9593\n\u662f\u5426\u63a5\u53d7\u795d\u798f\uff1f(y/n)", "Invitation", JOptionPane.YES_NO_OPTION) == JOptionPane.YES_OPTION) {
 				out.writeUTF("(ReceiveInvitation)" + room_id + "%" + cwc.username);
 				cwc.createNewRoom(room_id);
 			}
@@ -227,7 +228,6 @@ class Listener extends Frame implements Runnable
 			v.close();
 			return true;
 		}
-		
 		
 		return false;
 	}
@@ -269,6 +269,10 @@ class Listener extends Frame implements Runnable
 		}
 		String last = s.substring(begin)+"\n";
 		printText(r, last);
+		
+		if (robotMode) {
+			//printText(r, getRobotText());
+		}
 	}
 	
 	private IconInfo getIconPos(String s, int b) {
@@ -393,7 +397,7 @@ class Listener extends Frame implements Runnable
 	
 	private void setProfilePic() throws IOException {
 		// image search query via Google Image API
-		String url = "http://ajax.googleapis.com/ajax/services/search/images?v=1.0&q=" + URLEncoder.encode(cwc.username, "UTF-8");
+		String url = "http://ajax.googleapis.com/ajax/services/search/images?v=1.0&imgtype=face&rsz=8&q=" + URLEncoder.encode(cwc.username, "UTF-8");
 		BufferedReader in = new BufferedReader(new InputStreamReader(new URL(url).openStream(), "UTF-8"));
 		String json_result = in.readLine();
 		
@@ -402,27 +406,31 @@ class Listener extends Frame implements Runnable
 		json_obj = (JSONObject)json_obj.get("responseData");
 		JSONArray json_array = (JSONArray)json_obj.get("results");
 		
+		// set image from url
+		BufferedImage img_scaled = new BufferedImage(150, 150, BufferedImage.TYPE_INT_ARGB), img = null;
 		url = "http://image.kmt.org.tw/people/20090606164842.jpg";
 		for (int i = 0; i < json_array.size(); ++i) {
 			json_obj = (JSONObject)json_array.get(i);
-			if (Integer.parseInt((String)json_obj.get("width")) > 300 || Integer.parseInt((String)json_obj.get("height")) > 300) continue;
 			url = (String)json_obj.get("url");
-			if (isValidImageExt(url.substring(url.lastIndexOf('.') + 1))) break;
+			if (isValidImageExt(url.substring(url.lastIndexOf('.') + 1))) {
+				try {
+					img = ImageIO.read(new URL(url));
+				} catch (IIOException e) {
+					img = null;
+					continue;
+				}			
+				break;
+			}
 		}
+		
+		if (img == null)
+			img = ImageIO.read(new URL("http://image.kmt.org.tw/people/20090606164842.jpg"));
 			
-		// set image from url
-		BufferedImage img_scaled = new BufferedImage(150, 150, BufferedImage.TYPE_INT_ARGB), img = null;
-		try {
-			img = ImageIO.read(new URL(url));
-		} catch (IIOException e) {
-			System.out.println(url);
-			e.printStackTrace();
-			return;
-		}
 		img_scaled.createGraphics().drawImage(img, 0, 0, 150, 150, null);
-		for (int i = 0; i < 5; ++i)
+		for (int i = 0; i < 10; ++i)
 			img_scaled.createGraphics().drawImage(img_scaled, 0, 0, 150, 150, null); // draw multiple times to increase image quality
-		cwc.tabs.get(0).profilePicLabel.setIcon(new ImageIcon(img_scaled));
+		cwc.userIcon = new ImageIcon(img_scaled);
+		cwc.tabs.get(0).profilePicLabel.setIcon(cwc.userIcon);
 	}
 	
 	private boolean isValidImageExt(String ext) {

@@ -4,6 +4,7 @@ import java.util.Enumeration;
 import java.util.Hashtable;
 import java.util.Vector;
 
+import javax.swing.ImageIcon;
 import javax.swing.JFrame;
 import javax.swing.JOptionPane;
 import javax.swing.JTabbedPane;
@@ -19,6 +20,7 @@ public class ChatWindowClient {
 	public Listener listener;
 	public String username;
 	public String server_ip;
+	public ImageIcon userIcon;
 	
 	/**
 	 * Launch the application.

@@ -29,12 +29,18 @@ public class ChatTabClient extends JPanel {
 	private static final long serialVersionUID = 1L;
 	public ChatWindowClient cwc; 
 	public int room_id;
+	
 	public JPanel tabPanel;
 	public JTextField textUsername = new JTextField();
 	public JTextField textChat = new JTextField();
 	public DefaultListModel<String> userList = new DefaultListModel<String>();
 	public JList<String> userListUI = new JList<String>(userList);
-	public JLabel profilePicLabel = new JLabel("");
+	
+	public JLabel label = new JLabel("\u4F7F\u7528\u8005\u5217\u8868");
+    public JLabel selfNameLabel = new JLabel("");
+	public JLabel selfProfilePic = new JLabel("");
+	public JLabel friendNameLabel = new JLabel("");
+    public JLabel friendProfilePic = new JLabel("");
 
 	public ChatTabClient myself;
 	public StyleContext sc = new StyleContext();
@@ -74,7 +80,8 @@ public class ChatTabClient extends JPanel {
 	Style defaultStyle = sc.getStyle(StyleContext.DEFAULT_STYLE);
 	final Style mainStyle = sc.addStyle(null, defaultStyle);
 	final Style boldStyle = sc.addStyle(null, defaultStyle);
-	final Style greenStyle = sc.addStyle(null, defaultStyle);
+	final Style grayStyle = sc.addStyle(null, defaultStyle);
+	final Style boldGrayStyle = sc.addStyle(null, defaultStyle);
 	
 	private final JScrollPane emoticonScroll = new JScrollPane();
 
@@ -210,13 +217,17 @@ public class ChatTabClient extends JPanel {
 		emoticonTable.add(emo16);
 		
 		StyleConstants.setBold(boldStyle, true);
-		StyleConstants.setForeground(greenStyle, Color.GRAY);
-		textPane.setBorder(null);
+		StyleConstants.setBold(boldGrayStyle, true);
+		StyleConstants.setForeground(mainStyle, Color.BLACK);
+		StyleConstants.setForeground(boldStyle, Color.BLACK);
+		StyleConstants.setForeground(grayStyle, Color.GRAY);
+		StyleConstants.setForeground(boldGrayStyle, Color.DARK_GRAY);
 		textPane.addStyle("NormalMessage", mainStyle);
 		textPane.addStyle("UserName", boldStyle);
-		textPane.addStyle("SystemMessage", greenStyle);
+		textPane.addStyle("SystemMessage", grayStyle);
+		textPane.addStyle("FriendName", boldGrayStyle);
+		textPane.setBorder(null);
 		
-		JLabel label = new JLabel("\u4F7F\u7528\u8005\u5217\u8868");
 		label.setBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null));
 		label.setBounds(11, 10, 150, 25);
 		label.setHorizontalAlignment(SwingConstants.CENTER);
@@ -231,7 +242,7 @@ public class ChatTabClient extends JPanel {
 			    btnDisconnect.setEnabled(true);
 			    btnConnect.setVisible(false);
 			    btnDisconnect.setVisible(true);
-			    textChat.setEnabled(true);
+			    textChat.setEditable(true);
 				new Thread(cwc.listener = new Listener(cwc)).start();
 			}
 		});
@@ -284,9 +295,9 @@ public class ChatTabClient extends JPanel {
 		btnRobot.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
 				if (cwc.listener == null || !cwc.listener.isConnected()) return;
+				textChat.setEditable(cwc.listener.robotMode);
+				cwc.listener.printText(room_id, "<\u7cfb\u7d71\u8a0a\u606f> \u81ea\u52d5\u56de\u8a71\u6a21\u5f0f" + (cwc.listener.robotMode? "\u95dc\u9589": "\u958b\u555f") + "\u3002\n", "SystemMessage");
 				cwc.listener.robotMode = !cwc.listener.robotMode;
-				cwc.tabs.get(0).textChat.setEnabled(!cwc.listener.robotMode);
-				cwc.listener.printText(room_id, "<\u7cfb\u7d71\u8a0a\u606f> \u81ea\u52d5\u56de\u8a71\u6a21\u5f0f" + (cwc.listener.robotMode? "\u958b\u555f": "\u95dc\u9589") + "\u3002\n", "SystemMessage");
 			}
 		});
 		btnRobot.setBounds(563, 525, 104, 23);
@@ -382,8 +393,9 @@ public class ChatTabClient extends JPanel {
 		textUsername = new JTextField();
 		textUsername.setToolTipText("Please enter username");
 		textUsername.setBounds(10, 562, 150, 25);
-		tabPanel.add(textUsername);
 		textUsername.setColumns(10);
+		tabPanel.add(textUsername);
+		
 		textChat.setBounds(172, 562, 724, 25);				
 		textChat.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {			
@@ -399,12 +411,16 @@ public class ChatTabClient extends JPanel {
 			}
 		});		
 		tabPanel.add(textChat);
-		if (room_id == 0)
-			textChat.setEnabled(false);
-		userListUI.setBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null));
 		
+		if (room_id == 0) {
+			textChat.setEditable(false);
+			textUsername.requestFocus();
+		}
+
+		userListUI.setBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null));
 		userListUI.setBounds(11, 44, 150, 300);
 		tabPanel.add(userListUI);
+		
 		textPane.setBounds(172, 10, 731, 505);
 		textPane.setEditable(false);
 	    textScroll.setBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null));
@@ -412,11 +428,30 @@ public class ChatTabClient extends JPanel {
 	    tabPanel.add(textScroll);
 	    textScroll.setViewportView(textPane);	    	
 	    
-	    profilePicLabel.setForeground(Color.WHITE);
-	    profilePicLabel.setBackground(Color.WHITE);
-	    profilePicLabel.setBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null));
-	    profilePicLabel.setBounds(11, 361, 150, 150);
-	    tabPanel.add(profilePicLabel);
+	    selfProfilePic.setForeground(Color.WHITE);
+	    selfProfilePic.setBackground(Color.WHITE);
+	    selfProfilePic.setBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null));
+	    selfProfilePic.setBounds(11, 361, 150, 150);
+	    tabPanel.add(selfProfilePic);
+
+	    friendProfilePic.setVisible(false);
+	    friendProfilePic.setForeground(Color.WHITE);
+	    friendProfilePic.setBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null));
+	    friendProfilePic.setBackground(Color.WHITE);
+	    friendProfilePic.setBounds(11, 10, 150, 150);
+	    tabPanel.add(friendProfilePic);
+	    
+	    selfNameLabel.setVisible(false);
+	    selfNameLabel.setHorizontalAlignment(SwingConstants.CENTER);
+	    selfNameLabel.setBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null));
+	    selfNameLabel.setBounds(11, 326, 150, 25);
+	    tabPanel.add(selfNameLabel);
+	    friendNameLabel.setVisible(false);
+	    friendNameLabel.setHorizontalAlignment(SwingConstants.CENTER);
+	    friendNameLabel.setBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null));
+	    friendNameLabel.setBounds(11, 170, 150, 25);
+	    
+	    tabPanel.add(friendNameLabel);
 	}
 	
 	public MouseAdapter emoMouseListener(final String s) {
@@ -433,7 +468,7 @@ public class ChatTabClient extends JPanel {
 	
 	public void autoConnect(int r_id) {
 		room_id = r_id;
-		profilePicLabel.setIcon(cwc.userIcon);
+		selfProfilePic.setIcon(cwc.userIcon);
 		textUsername.setText(cwc.username);
 		textUsername.setEditable(false);		
 	    textChat.requestFocus();

@@ -17,7 +17,6 @@ public class ChatWindowClient {
 	public JFrame frmLabChatroom;
 	public JFrame dialogFrame;
 	public JTabbedPane tabbedPane;
-	public ChatTabClient tabOnFocus;
 	public Hashtable<Integer, ChatTabClient> tabs = new Hashtable<Integer, ChatTabClient>();
 	public Listener listener;
 	public String username;
@@ -59,7 +58,7 @@ public class ChatWindowClient {
 			private ChatWindowClient master;
 			public myChangeListener(ChatWindowClient cwt) { this.master = cwt; }
 			public void stateChanged(ChangeEvent e) {
-		    	master.tabs.get(master.getRoomIdOnFocus()).textChat.setEnabled(!master.listener.robotMode);
+		    	master.tabs.get(master.getRoomIdOnFocus()).textChat.setEditable(!master.listener.robotMode);
 			}
 		};
 		tabbedPane.addChangeListener(new myChangeListener(this));
@@ -77,12 +76,12 @@ public class ChatWindowClient {
 	}
 	
 	public void createNewRoom(int r) {
-		System.out.println("start to open tab" + r);
 		tabs.put(r, new ChatTabClient(this, r));
 		tabs.get(r).autoConnect(r);		
 		tabbedPane.addTab("Room" + r, null, tabs.get(r).tabPanel, null);
+		tabs.get(r).tabPanel.setName(Integer.toString(r));
 		tabbedPane.setSelectedComponent(tabs.get(r).tabPanel);
-		tabbedPane.getSelectedComponent().setName(Integer.toString(r));
+		System.out.println("Open tab: " + tabbedPane.getSelectedComponent().getName());
 	}
 	
 	public void removeAllTabs() {

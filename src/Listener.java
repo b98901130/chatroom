@@ -11,6 +11,7 @@ import java.util.Vector;
 import javax.imageio.IIOException;
 import javax.imageio.ImageIO;
 import javax.swing.ImageIcon;
+import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JTextPane;
 
@@ -38,7 +39,7 @@ class Listener extends Frame implements Runnable
 				cwc.tabs.get(0).textUsername.setText(cwc.username);
 			}
 			out.writeUTF(cwc.username);
-			setProfilePic();
+			setProfilePic(cwc.tabs.get(0).selfProfilePic);
 			
 			String message = in.readUTF();
 			if (message.startsWith("(UserList)"))
@@ -95,13 +96,14 @@ class Listener extends Frame implements Runnable
 		ctc.btnDisconnect.setEnabled(false);
 		ctc.btnConnect.setVisible(true);
 		ctc.btnDisconnect.setVisible(false);
-		ctc.textChat.setEnabled(false);
+		ctc.textChat.setEditable(false);
 		ctc.textPane.setEditable(true);
 		ctc.textPane.setText("");
 		ctc.textPane.setEditable(false);
 		cwc.username = "";
-		cwc.tabs.get(0).profilePicLabel.setIcon(null);
+		cwc.tabs.get(0).selfProfilePic.setIcon(null);
 	    cwc.removeAllTabs();
+	    robotMode = false;
 	}
 	
 	public void printText(int r, String s) {
@@ -181,14 +183,7 @@ class Listener extends Frame implements Runnable
 			room_id = Integer.parseInt(message.substring(message.indexOf(")") + 1, message.indexOf('%')));
 			cwc.createNewRoom(room_id);
 			parseUserList(message);
-			if (cwc.tabs.get(room_id).userList.firstElement().equals(cwc.username))
-				cwc.tabbedPane.setTitleAt(cwc.tabbedPane.getSelectedIndex(), "with " + cwc.tabs.get(room_id).userList.lastElement());
-			else
-				cwc.tabbedPane.setTitleAt(cwc.tabbedPane.getSelectedIndex(), "with " + cwc.tabs.get(room_id).userList.firstElement());
-			cwc.tabs.get(room_id).btnLeaveRoom.setVisible(false);
-			cwc.tabs.get(room_id).btnInvitation.setVisible(false);
-			cwc.tabs.get(room_id).btnWhisper.setVisible(false);
-			cwc.tabs.get(room_id).btnLeaveWhisper.setVisible(true);
+			setWhisperRoom(room_id);
 			return true;
 		case "(UserNameConflict)":
 			disconnect();
@@ -256,11 +251,15 @@ class Listener extends Frame implements Runnable
 			textPane.setEditable(true);	
 			textPane.setSelectionStart(textPane.getText().length());
 			textPane.setSelectionEnd(textPane.getText().length());
-		    textPane.setCharacterAttributes(textPane.getStyle("UserName"), true);
-			textPane.replaceSelection(name + ": ");
+			if (name.equals(cwc.username))
+				textPane.setCharacterAttributes(textPane.getStyle("UserName"), true);
+			else
+				textPane.setCharacterAttributes(textPane.getStyle("FriendName"), true);
+			textPane.replaceSelection(name + ":\n");
 			textPane.setEditable(false);
 		}
 		
+		printText(r, " \u2027 ");
 		int begin = offset3+1;
 		int end = offset3+1;		
 		IconInfo getIcon = getIconPos(s, begin);
@@ -384,10 +383,33 @@ class Listener extends Frame implements Runnable
 		}
 	}
 	
+	private void setWhisperRoom(int room_id) throws IOException {
+		String friendName = null;
+		if (cwc.tabs.get(room_id).userList.firstElement().equals(cwc.username))
+			friendName = cwc.tabs.get(room_id).userList.lastElement();
+		else
+			friendName = cwc.tabs.get(room_id).userList.firstElement();
+		
+		cwc.tabbedPane.setTitleAt(cwc.tabbedPane.getSelectedIndex(), "with " + friendName);
+		cwc.tabs.get(room_id).friendNameLabel.setText(friendName);
+		setProfilePic(friendName, cwc.tabs.get(room_id).friendProfilePic);
+		
+		cwc.tabs.get(room_id).btnLeaveRoom.setVisible(false);
+		cwc.tabs.get(room_id).btnInvitation.setVisible(false);
+		cwc.tabs.get(room_id).btnWhisper.setVisible(false);
+		cwc.tabs.get(room_id).btnLeaveWhisper.setVisible(true);
+		cwc.tabs.get(room_id).userListUI.setVisible(false);
+		cwc.tabs.get(room_id).label.setVisible(false);
+		cwc.tabs.get(room_id).selfNameLabel.setText(cwc.username);
+		cwc.tabs.get(room_id).selfNameLabel.setVisible(true);
+		cwc.tabs.get(room_id).friendNameLabel.setVisible(true);
+		cwc.tabs.get(room_id).friendProfilePic.setVisible(true);
+	}
+	
 	private String getRobotText(String message) throws IOException {
 		// add random delay
 		try {
-			Thread.sleep((int)(2000 * Math.random() + 1000));
+			Thread.sleep((int)(1500 * Math.random() + 1200));
 		} catch (InterruptedException e) {
 			e.printStackTrace();
 		}
@@ -402,7 +424,7 @@ class Listener extends Frame implements Runnable
 		else {
 			// if API daily limit exceeded
 			Random rand = new Random();
-			String[] randomText = {"", "嗯嗯", "呵呵", "哈哈", "喔喔", "?", "恩恩", "是喔", "ㄏㄏ", "蛤"};
+			String[] randomText = {"", "嗯嗯", "呵呵", "哈哈", "喔喔", "?", "恩恩", "", "ㄏㄏ", "蛤"};
 			String[] randomFace = {"", "^^", "><", ":目", "?", "~", "XD", "QQ"};
 			return randomText[rand.nextInt(randomText.length)] + randomFace[rand.nextInt(randomFace.length)];
 		}
@@ -423,17 +445,20 @@ class Listener extends Frame implements Runnable
 		return ret;
 	}
 	
-	private void setProfilePic() throws IOException {
+	private void setProfilePic(JLabel target) throws IOException {
+		setProfilePic(cwc.username, target);
+	}
+	
+	private void setProfilePic(String username, JLabel target) throws IOException {
 		// image search query via Google Image API
-		String url = "http://ajax.googleapis.com/ajax/services/search/images?v=1.0&imgtype=face&rsz=8&q=" + URLEncoder.encode(cwc.username, "UTF-8");
-		BufferedReader in;
-		JSONObject json_obj;
-		JSONArray json_array = null;
+		String url = "http://ajax.googleapis.com/ajax/services/search/images?v=1.0&imgtype=face&rsz=8&q=" + URLEncoder.encode(username, "UTF-8");
+		BufferedReader in = new BufferedReader(new InputStreamReader(new URL(url).openStream(), "UTF-8"));
+		JSONObject json_obj = (JSONObject)JSONValue.parse(in.readLine());
+		in.close();
 		
 		// parse JSON to get image url
-		in = new BufferedReader(new InputStreamReader(new URL(url).openStream(), "UTF-8"));
-		json_obj = (JSONObject)JSONValue.parse(in.readLine());
 		json_obj = (JSONObject)json_obj.get("responseData");
+		JSONArray json_array = null;
 		if (json_obj != null)
 			json_array = (JSONArray)json_obj.get("results");
 		
@@ -461,8 +486,10 @@ class Listener extends Frame implements Runnable
 			img = ImageIO.read(new URL("http://image.kmt.org.tw/people/20090606164842.jpg"));
 			
 		img_scaled.createGraphics().drawImage(img, 0, 0, 150, 150, null);
-		cwc.userIcon = new ImageIcon(img_scaled);
-		cwc.tabs.get(0).profilePicLabel.setIcon(cwc.userIcon);
+		ImageIcon icon = new ImageIcon(img_scaled);
+		if (username.equals(cwc.username))
+			cwc.userIcon = icon;
+		target.setIcon(icon);
 	}
 	
 	private boolean isValidImageExt(String ext) {

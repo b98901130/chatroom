@@ -159,6 +159,7 @@ class ServerThread implements Runnable
 		DataOutputStream out;
 		Hashtable<String, DataOutputStream> ht_room;
 		int room_id;
+		String receiverName, transmitterName, receiverIP, transmitterIP;
 		
 		switch (header) {
 		case "(IPRequest)":
@@ -278,7 +279,43 @@ class ServerThread implements Runnable
 			}
 			out.writeUTF("(RejectInvitation)");
 			return true;
+		case "(VideoChatRequest)":
+			receiverName = msg.substring(msg.indexOf(")") + 1, msg.indexOf("_"));
+			transmitterName = msg.substring(msg.indexOf("_") + 1);
+			synchronized (master.ht_user) {
+				ip = master.ht_user.get(transmitterName).getIp();
+			}
+			synchronized (master.ht_user) {
+				out = new DataOutputStream(master.ht_user.get(receiverName).getSocket().getOutputStream());
+			}
+			out.writeUTF("(VideoChatRequest)" + transmitterName);
+			return true;
+		case "(ReceiveVideoChat)":
+			receiverName = msg.substring(msg.indexOf(")") + 1, msg.indexOf("_"));
+			transmitterName = msg.substring(msg.indexOf("_") + 1);
+			synchronized (master.ht_user) {
+				out = new DataOutputStream(master.ht_user.get(transmitterName).getSocket().getOutputStream());
+			}
+			synchronized (master.ht_user) {
+				receiverIP = master.ht_user.get(receiverName).getIp();
+				transmitterIP = master.ht_user.get(transmitterName).getIp();
+			}
+			out.writeUTF("(TransmitterBeginVideoChat)"+receiverIP+":"+"5555_" + transmitterIP+":"+"5555");
+			
+			synchronized (master.ht_user) {
+				out = new DataOutputStream(master.ht_user.get(receiverName).getSocket().getOutputStream());
+			}
+			out.writeUTF("(ReceiverBeginVideoChat)"+receiverIP+":"+"5555_" + transmitterIP+":"+"5555");
+			return true;
+		case "(RejectVideoChat)":
+			transmitterName = msg.substring(msg.indexOf(")") + 1);
+			synchronized (master.ht_user) {
+				out = new DataOutputStream(master.ht_user.get(transmitterName).getSocket().getOutputStream());
+			}
+			out.writeUTF("(RejectVideoChat)");
+			return true;
 		}
+		
 		
 		return false;
 	}

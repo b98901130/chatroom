@@ -23,6 +23,7 @@ class Listener extends Frame implements Runnable
 	DataOutputStream out; // client->server
 	DataInputStream in;   // server->client
 	ChatWindowClient cwc;
+	VideoChat v;
 
 	public Listener(ChatWindowClient c) {		
 		cwc = c; 
@@ -121,7 +122,8 @@ class Listener extends Frame implements Runnable
 		String header = message.substring(0, message.indexOf(")") + 1), username, ip;
 		int room_id;
 		FileDialog fd;
-		
+		String transmitterName, transmitterInfo, receiverInfo;
+				
 		switch (header) {
 		case "(UserConnected)":
 			room_id = Integer.parseInt(message.substring(message.indexOf(')') + 1, message.indexOf('%')));
@@ -200,7 +202,32 @@ class Listener extends Frame implements Runnable
 			room_id = Integer.parseInt(message.substring(message.indexOf(")") + 1));
 			cwc.removeTab(room_id);
 			return true;
+		case "(VideoChatRequest)":
+			transmitterName = message.substring(message.indexOf(")") + 1);
+			if (JOptionPane.showConfirmDialog(cwc.dialogFrame, transmitterName + "\u9080\u8acb\u4f60\u9032\u884c\u8996\u8a0a\u901a\u8a71\n\u662f\u5426\u63a5\u53d7\u795d\u798f\uff1f(y/n)", "視訊邀請", JOptionPane.YES_NO_OPTION) == JOptionPane.YES_OPTION) {
+				out.writeUTF("(ReceiveVideoChat)" + transmitterName + "_" + cwc.username);
+				v = new VideoChat(cwc);
+			}
+			else
+				out.writeUTF("(RejectVideoChat)" + transmitterName);
+			return true;
+		case "(TransmitterBeginVideoChat)":
+			receiverInfo = message.substring(message.indexOf(")") + 1, message.indexOf("_"));
+			transmitterInfo = message.substring(message.indexOf("_") + 1);
+			v.sendLocalVideo(receiverInfo);
+			v.receiveRemoteVideo(transmitterInfo);
+			return true;
+		case "(ReceiverBeginVideoChat)":
+			receiverInfo = message.substring(message.indexOf(")") + 1, message.indexOf("_"));
+			transmitterInfo = message.substring(message.indexOf("_") + 1);
+			v.sendLocalVideo(transmitterInfo);
+			v.receiveRemoteVideo(receiverInfo);
+			return true;
+		case "(RejectVideoChat)":
+			v.close();
+			return true;
 		}
+		
 		
 		return false;
 	}

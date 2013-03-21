@@ -313,6 +313,9 @@ public class ChatTabClient extends JPanel {
 				if (cwc.username.equals(receiver)) return;
 				
 				// TODO
+				VideoChat v = new VideoChat(cwc);
+				v.setTitle("Video Chat with " + receiver);
+				v.askForVideoChat(receiver, cwc.username);
 			}			
 		});
 		btnVoice.setBounds(791, 525, 104, 23);

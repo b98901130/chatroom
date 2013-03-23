@@ -37,7 +37,6 @@ public class ChatWindowClient {
 	public JFrame browserFrame = new JFrame("Facebook Login");
 	public JPanel webBrowserPanel = new JPanel(new BorderLayout());
 	public JWebBrowser webBrowser = new JWebBrowser();
-	public String accessToken = ""; // FB access OAuth token
 	public FBChatTab fbTab = new FBChatTab(this);
 	public FBChatClient fbClient = new FBChatClient(fbTab);
 	
@@ -91,7 +90,7 @@ public class ChatWindowClient {
 		// initialize web browser for FB login
 		browserFrame.setVisible(false);
 		browserFrame.getContentPane().add(webBrowserPanel, BorderLayout.CENTER);
-		browserFrame.setSize(420, 310);
+		browserFrame.setSize(450, 350);
 		browserFrame.setBackground(Color.WHITE);
 		browserFrame.setLocationByPlatform(true);
 		browserFrame.setResizable(false);
@@ -102,10 +101,8 @@ public class ChatWindowClient {
 				String pageUrl = event.getWebBrowser().getResourceLocation();
 				if (pageUrl.startsWith("https://www.facebook.com/connect/login_success.html")) {
 					browserFrame.setVisible(false);
-					if (pageUrl.indexOf("error_reason") < 0) {
-						accessToken = pageUrl.substring(pageUrl.indexOf("access_token=") + 13, pageUrl.indexOf("&expires_in"));
-						fbClient.getFriendList();
-					}
+					if (pageUrl.indexOf("error_reason") < 0)
+						fbClient.setAccessToken(pageUrl.substring(pageUrl.indexOf("access_token=") + 13, pageUrl.indexOf("&expires_in")));
 				}
 			}
 			public void commandReceived(WebBrowserCommandEvent event) {}
@@ -138,8 +135,10 @@ public class ChatWindowClient {
 	}
 	
 	public void createFBChat() {
-		tabbedPane.addTab("Facebook Chat", null, fbTab.tabPanel, null);
-		fbTab.tabPanel.setName("-1");
+		if (fbTab.tabPanel.getName() == null) {
+			tabbedPane.addTab("Facebook Chat", null, fbTab.tabPanel, null);
+			fbTab.tabPanel.setName("-1");
+		}
 		tabbedPane.setSelectedComponent(fbTab.tabPanel);
 	}
 	

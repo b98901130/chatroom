@@ -18,6 +18,7 @@ public class ChatWindowClient {
 	public JFrame dialogFrame;
 	public JTabbedPane tabbedPane;
 	public Hashtable<Integer, ChatTabClient> tabs = new Hashtable<Integer, ChatTabClient>();
+	public FBChatTab fbTab = new FBChatTab(this);
 	public Listener listener;
 	public String username;
 	public String server_ip;
@@ -58,7 +59,9 @@ public class ChatWindowClient {
 			private ChatWindowClient master;
 			public myChangeListener(ChatWindowClient cwt) { this.master = cwt; }
 			public void stateChanged(ChangeEvent e) {
-		    	master.tabs.get(master.getRoomIdOnFocus()).textChat.setEditable(!master.listener.robotMode);
+				int room_id = master.getRoomIdOnFocus();
+				if (room_id >= 0 && listener != null)
+					master.tabs.get(room_id).textChat.setEditable(!master.listener.robotMode);
 			}
 		};
 		tabbedPane.addChangeListener(new myChangeListener(this));
@@ -82,6 +85,12 @@ public class ChatWindowClient {
 		tabs.get(r).tabPanel.setName(Integer.toString(r));
 		tabbedPane.setSelectedComponent(tabs.get(r).tabPanel);
 		System.out.println("Open tab: " + tabbedPane.getSelectedComponent().getName());
+	}
+	
+	public void createFBChat() {
+		tabbedPane.addTab("FB Chat", null, fbTab.tabPanel, null);
+		fbTab.tabPanel.setName("-1");
+		tabbedPane.setSelectedComponent(fbTab.tabPanel);
 	}
 	
 	public void removeAllTabs() {

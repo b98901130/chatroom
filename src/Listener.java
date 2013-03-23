@@ -155,6 +155,7 @@ class Listener extends Frame implements Runnable
 			username = message.substring(message.indexOf(')') + 1, message.indexOf('%'));
 			ip = message.substring(message.indexOf('%') + 1);
 			fd = new FileDialog(cwc.dialogFrame, "Load file..", FileDialog.LOAD); // use FileDialog to get filename
+			fd.setLocationByPlatform(true);
 			fd.setVisible(true);			
 			if (fd.getFile() == null)
 				printText(cwc.getRoomIdOnFocus(), "<\u7cfb\u7d71\u8a0a\u606f> \u53d6\u6d88\u50b3\u6a94\u3002\n", "SystemMessage");
@@ -173,6 +174,7 @@ class Listener extends Frame implements Runnable
 		case "(FileRequest)":
 			username = message.substring(message.indexOf(')') + 1);
 			fd = new FileDialog(cwc.dialogFrame, "Save file..", FileDialog.SAVE); // use FileDialog to get filename
+			fd.setLocationByPlatform(true);
             new Thread(new Receiver(username, fd, this)).start();
 			return true;
 		case "(Opened_Room)":
@@ -398,6 +400,7 @@ class Listener extends Frame implements Runnable
 		cwc.tabs.get(room_id).btnInvitation.setVisible(false);
 		cwc.tabs.get(room_id).btnWhisper.setVisible(false);
 		cwc.tabs.get(room_id).btnLeaveWhisper.setVisible(true);
+		cwc.tabs.get(room_id).btnRobot.setVisible(true);
 		cwc.tabs.get(room_id).userListUI.setVisible(false);
 		cwc.tabs.get(room_id).label.setVisible(false);
 		cwc.tabs.get(room_id).selfNameLabel.setText(cwc.username);

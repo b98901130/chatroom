@@ -58,6 +58,7 @@ public class ChatTabClient extends JPanel {
 	public JButton btnLeaveRoom = new JButton("\u96E2\u958B\u623F\u9593");
 	public JButton btnLeaveWhisper = new JButton("\u96E2\u958B\u5bc6\u8ac7");
 	public JButton btnInvitation = new JButton("\u9080\u8ACB\u4F7F\u7528\u8005");
+	public JButton btnFB = new JButton("Facebook");
 	private final JPanel emoticonPane = new JPanel();
 	private final JPanel emoticonTable = new JPanel();
 	private final JButton emo1 = new JButton("");
@@ -301,7 +302,16 @@ public class ChatTabClient extends JPanel {
 			}
 		});
 		btnRobot.setBounds(563, 525, 104, 23);
-		tabPanel.add(btnRobot);				
+		btnRobot.setVisible(false);
+		tabPanel.add(btnRobot);			
+		
+		btnFB.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent arg0) {
+				cwc.createFBChat();
+			}
+		});
+		btnFB.setBounds(563, 525, 104, 23);
+		tabPanel.add(btnFB);	
 		
 		btnTransfer.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
@@ -476,6 +486,7 @@ public class ChatTabClient extends JPanel {
 	    btnDisconnect.setEnabled(false);
 	    btnConnect.setVisible(false);
 	    btnDisconnect.setVisible(false);
+	    btnRobot.setVisible(false);
 		btnInvitation.setVisible(true);
 		btnLeaveRoom.setVisible(true);
 	    textChat.setEnabled(true);		

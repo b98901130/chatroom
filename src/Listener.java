@@ -401,7 +401,7 @@ class Listener extends Frame implements Runnable
 		cwc.tabs.get(room_id).btnWhisper.setVisible(false);
 		cwc.tabs.get(room_id).btnLeaveWhisper.setVisible(true);
 		cwc.tabs.get(room_id).btnRobot.setVisible(true);
-		cwc.tabs.get(room_id).userListUI.setVisible(false);
+		cwc.tabs.get(room_id).scrollPane.setVisible(false);
 		cwc.tabs.get(room_id).label.setVisible(false);
 		cwc.tabs.get(room_id).selfNameLabel.setText(cwc.username);
 		cwc.tabs.get(room_id).selfNameLabel.setVisible(true);

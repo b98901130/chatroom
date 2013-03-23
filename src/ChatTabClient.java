@@ -35,6 +35,7 @@ public class ChatTabClient extends JPanel {
 	public JTextField textChat = new JTextField();
 	public DefaultListModel<String> userList = new DefaultListModel<String>();
 	public JList<String> userListUI = new JList<String>(userList);
+    public JScrollPane scrollPane = new JScrollPane();
 	
 	public JLabel label = new JLabel("\u4F7F\u7528\u8005\u5217\u8868");
     public JLabel selfNameLabel = new JLabel("");
@@ -311,7 +312,7 @@ public class ChatTabClient extends JPanel {
 			}
 		});
 		btnFB.setBounds(563, 525, 104, 23);
-		tabPanel.add(btnFB);	
+		tabPanel.add(btnFB);
 		
 		btnTransfer.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
@@ -427,10 +428,6 @@ public class ChatTabClient extends JPanel {
 			textUsername.requestFocus();
 		}
 
-		userListUI.setBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null));
-		userListUI.setBounds(11, 44, 150, 300);
-		tabPanel.add(userListUI);
-		
 		textPane.setBounds(172, 10, 731, 505);
 		textPane.setEditable(false);
 	    textScroll.setBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null));
@@ -462,6 +459,10 @@ public class ChatTabClient extends JPanel {
 	    friendNameLabel.setBounds(11, 170, 150, 25);
 	    
 	    tabPanel.add(friendNameLabel);
+	    
+	    scrollPane.setBounds(11, 44, 150, 300);
+	    tabPanel.add(scrollPane);
+	    scrollPane.setViewportView(userListUI);
 	}
 	
 	public MouseAdapter emoMouseListener(final String s) {

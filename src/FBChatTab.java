@@ -22,10 +22,16 @@ import javax.swing.text.StyleContext;
 import javax.swing.border.EtchedBorder;
 import javax.swing.ImageIcon;
 
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+
 public class FBChatTab extends JPanel {
 
 	private static final long serialVersionUID = 1L;
+	
 	public final ChatWindowClient cwc;
+	public final FBChatTab myself = this;
+	public boolean logged_in = false;
 	
 	public JPanel tabPanel;
 	public JTextField textChat = new JTextField();
@@ -85,10 +91,6 @@ public class FBChatTab extends JPanel {
 		tabPanel.add(textChat);
 	    textChat.requestFocus();
 		
-		userListUI.setBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null));
-		userListUI.setBounds(11, 44, 150, 492);
-		tabPanel.add(userListUI);
-		
 		textPane.setBounds(172, 10, 731, 505);
 		textPane.setEditable(false);
 	    textScroll.setBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null));
@@ -97,6 +99,15 @@ public class FBChatTab extends JPanel {
 	    textScroll.setViewportView(textPane);	    	
 	    
 	    JLabel fb_label = new JLabel("");
+	    fb_label.addMouseListener(new MouseAdapter() {
+	    	public void mousePressed(MouseEvent arg0) {
+	    		if (logged_in) return;
+	    		cwc.webBrowser.navigate("https://www.facebook.com/dialog/oauth?scope=xmpp_login&redirect_uri=https://www.facebook.com/connect/login_success.html&display=popup&response_type=token&client_id=284623318334487");
+	    		new Thread(new FBChatClient(myself)).start();
+	    	}
+	    });
+	    fb_label.setToolTipText("\u767B\u5165Facebook");
+	    fb_label.setBorder(new EtchedBorder(EtchedBorder.RAISED, null, null));
 	    fb_label.setBounds(11, 544, 50, 50);
 		BufferedImage img_scaled = null, img = null;
 		try {
@@ -108,6 +119,14 @@ public class FBChatTab extends JPanel {
 		img_scaled.createGraphics().drawImage(img, 0, 0, 50, 50, null);
 		fb_label.setIcon(new ImageIcon(img_scaled));
 	    tabPanel.add(fb_label);
+	    
+	    JLabel lblfacebook = new JLabel("\u2190 \u767B\u5165Facebook");
+	    lblfacebook.setBounds(64, 579, 107, 15);
+	    tabPanel.add(lblfacebook);
+	    
+	    JScrollPane scrollPane = new JScrollPane();
+	    scrollPane.setBounds(11, 45, 150, 491);
+	    tabPanel.add(scrollPane);
+	    scrollPane.setViewportView(userListUI);
 	}
-	
 }

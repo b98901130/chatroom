@@ -72,8 +72,8 @@ public class VideoChat {
 	    
 	    contentPane = new JPanel();
 	    contentPane.setLayout(null);
-	    contentPane.add(localPanel);
 	    contentPane.add(remotePanel);
+	    contentPane.add(localPanel);
 	    
 	    //·s¼Wµøµ¡
 	    frame = new JFrame();

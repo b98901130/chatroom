@@ -5,6 +5,23 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.io.IOException;
 
+import javafx.application.Platform;
+import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableValue;
+import javafx.embed.swing.JFXPanel;
+import javafx.event.EventHandler;
+import javafx.scene.Group;
+import javafx.scene.Scene;
+import javafx.scene.control.Button;
+import javafx.scene.control.TextField;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.Priority;
+import javafx.scene.layout.VBox;
+import javafx.scene.text.Font;
+import javafx.scene.text.Text;
+import javafx.scene.web.WebEngine;
+import javafx.scene.web.WebView;
+
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.DefaultListModel;
@@ -60,6 +77,7 @@ public class ChatTabClient extends JPanel {
 	public JButton btnLeaveWhisper = new JButton("\u96E2\u958B\u5bc6\u8ac7");
 	public JButton btnInvitation = new JButton("\u9080\u8ACB\u4F7F\u7528\u8005");
 	public JButton btnFB = new JButton("Facebook");
+	public JButton btnBonus =  new JButton("HTML"); 
 	private final JPanel emoticonPane = new JPanel();
 	private final JPanel emoticonTable = new JPanel();
 	private final JButton emo1 = new JButton("");
@@ -102,7 +120,7 @@ public class ChatTabClient extends JPanel {
 	 */
 	private void initialize() {
 		tabPanel = new JPanel();		
-		tabPanel.setBounds(100, 100, 903, 604);
+		tabPanel.setBounds(100, 100, 1004, 606);
 		tabPanel.setLayout(null);
 		emoticonPane.setBorder(new LineBorder(new Color(0, 0, 0)));
 		emoticonPane.setBackground(Color.WHITE);
@@ -166,6 +184,22 @@ public class ChatTabClient extends JPanel {
 		emo16.setForeground(Color.WHITE);
 		emo16.setBackground(Color.WHITE);
 		emo16.setIcon(new ImageIcon("images/16.png"));
+		emo1.setBorder(null);
+		emo2.setBorder(null);
+		emo3.setBorder(null);
+		emo4.setBorder(null);
+		emo5.setBorder(null);
+		emo6.setBorder(null);
+		emo7.setBorder(null);
+		emo8.setBorder(null);
+		emo9.setBorder(null);
+		emo10.setBorder(null);
+		emo11.setBorder(null);
+		emo12.setBorder(null);
+		emo13.setBorder(null);
+		emo14.setBorder(null);
+		emo15.setBorder(null);
+		emo16.setBorder(null);
 		
 		emo1.addMouseListener(emoMouseListener("{emo01}"));
 		emo2.addMouseListener(emoMouseListener("{emo02}"));
@@ -343,13 +377,19 @@ public class ChatTabClient extends JPanel {
 				if (cwc.username.equals(receiver)) return;
 				
 				// TODO
-				VideoChat v = new VideoChat(cwc);
-				v.setTitle("Video Chat with " + receiver);
-				v.askForVideoChat(receiver, cwc.username);
+				askForVideoChat(receiver, cwc.username);
 			}			
 		});
 		btnVoice.setBounds(791, 525, 104, 23);
 		tabPanel.add(btnVoice);		
+		
+		btnBonus.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent arg0) {
+				EditHTML e = new EditHTML(); 
+			}			
+		});
+		btnBonus.setBounds(905, 525, 90, 23);
+		tabPanel.add(btnBonus);		
 		
 		btnLeaveRoom.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {		
@@ -465,6 +505,29 @@ public class ChatTabClient extends JPanel {
 	    scrollPane.setViewportView(userListUI);
 	}
 	
+	public void addYouTube(final String s){
+		JScrollPane scrollPane = new JScrollPane();
+        JPanel p = new JPanel();
+        scrollPane.setViewportView(p);
+        textPane.setSelectionStart(textPane.getText().length());
+        textPane.setSelectionEnd(textPane.getText().length());
+        textPane.replaceSelection("\n");
+        textPane.insertComponent(scrollPane);
+        textPane.setSelectionStart(textPane.getText().length());
+        textPane.setSelectionEnd(textPane.getText().length());
+        textPane.replaceSelection("\n");	            
+        final JFXPanel fxPanel = new JFXPanel();
+        p.add(fxPanel);
+        Platform.setImplicitExit(false);
+		Platform.runLater(new Runnable() {
+            @Override
+            public void run() {
+            	initFX(fxPanel, s);
+            }
+        });     
+		scrollPane.setSize(200, 200);
+	}
+	
 	public MouseAdapter emoMouseListener(final String s) {
 		MouseAdapter ma = new MouseAdapter() {
 			@Override
@@ -491,5 +554,64 @@ public class ChatTabClient extends JPanel {
 		btnInvitation.setVisible(true);
 		btnLeaveRoom.setVisible(true);
 	    textChat.setEnabled(true);		
+	}
+    private static void initFX(JFXPanel fxPanel, String s) {
+        // This method is invoked on the JavaFX thread
+        Scene scene = createScene(s);
+        fxPanel.setScene(scene);
+    }
+
+    private static Scene createScene(String s) {
+    	String DEFAULT_URL = s;
+    	Group root = new Group();
+		WebView webView = new WebView();
+		final WebEngine webEngine = webView.getEngine();
+		webEngine.load(DEFAULT_URL);
+		final TextField locationField = new TextField(DEFAULT_URL);
+		webEngine.locationProperty().addListener(new ChangeListener<String>() {
+
+			@Override
+			public void changed(ObservableValue<? extends String> observable,
+					String oldValue, String newValue) {
+				locationField.setText(newValue);
+			}
+		});
+
+		EventHandler<javafx.event.ActionEvent> goAction = new EventHandler<javafx.event.ActionEvent>() {
+			@Override
+			public void handle(javafx.event.ActionEvent event) {
+				// TODO Auto-generated method stub
+				webEngine.load(locationField.getText().startsWith("http://")
+						? locationField.getText()
+						: "http://" + locationField.getText());
+				
+			}
+		};
+
+		locationField.setOnAction(goAction);
+		Button goButton = new Button("Go");
+		goButton.setDefaultButton(true);
+		goButton.setOnAction(goAction);
+
+		// Layout logic
+
+		HBox hBox = new HBox(5);
+		hBox.getChildren().setAll(locationField, goButton);
+		HBox.setHgrow(locationField, Priority.ALWAYS);
+		VBox vBox = new VBox(5);
+		vBox.getChildren().setAll(hBox, webView);
+		VBox.setVgrow(webView, Priority.ALWAYS);
+		root.getChildren().add(vBox);		
+        return new Scene(root);
+    }
+    
+    public void askForVideoChat(String receiverName, String transmitterName)
+	{
+		try {		
+			cwc.listener.out.writeUTF("(VideoChatRequest)" + receiverName + "_" + transmitterName);
+			JOptionPane.showMessageDialog(cwc.dialogFrame, "等待 "+receiverName+" 接受邀約...", "SkypeLog",JOptionPane.PLAIN_MESSAGE);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 	}
 }

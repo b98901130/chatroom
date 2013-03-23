@@ -210,29 +210,38 @@ class Listener extends Frame implements Runnable
 			return true;
 		case "(VideoChatRequest)":
 			transmitterName = message.substring(message.indexOf(")") + 1);
-			if (JOptionPane.showConfirmDialog(cwc.dialogFrame, transmitterName + "\u9080\u8acb\u4f60\u9032\u884c\u8996\u8a0a\u901a\u8a71\n\u662f\u5426\u63a5\u53d7\u795d\u798f\uff1f(y/n)", "視訊邀請", JOptionPane.YES_NO_OPTION) == JOptionPane.YES_OPTION) {
-				out.writeUTF("(ReceiveVideoChat)" + transmitterName + "_" + cwc.username);
+			if (JOptionPane.showConfirmDialog(cwc.dialogFrame, transmitterName 
+					         + "\u9080\u8acb\u4f60\u9032\u884c\u8996\u8a0a\u901a\u8a71\n\u662f\u5426\u63a5\u53d7\u795d\u798f\uff1f(y/n)",
+							"\u6709\u4EBA\u9080\u8ACB\u4F60\u804A\u5929", JOptionPane.YES_NO_OPTION) == JOptionPane.YES_OPTION) {
+				out.writeUTF("(ReceiveVideoChat)" + transmitterName + "_"
+						+ cwc.username);
 				v = new VideoChat(cwc);
-			}
-			else
+			} else
 				out.writeUTF("(RejectVideoChat)" + transmitterName);
 			return true;
 		case "(TransmitterBeginVideoChat)":
-			receiverInfo = message.substring(message.indexOf(")") + 1, message.indexOf("_"));
+			receiverInfo = message.substring(message.indexOf(")") + 1,
+					message.indexOf("_"));
 			transmitterInfo = message.substring(message.indexOf("_") + 1);
+			v = new VideoChat(cwc);
+			v.setTitle("Transmitter");
 			v.sendLocalVideo(receiverInfo);
 			v.receiveRemoteVideo(transmitterInfo);
 			return true;
 		case "(ReceiverBeginVideoChat)":
-			receiverInfo = message.substring(message.indexOf(")") + 1, message.indexOf("_"));
+			receiverInfo = message.substring(message.indexOf(")") + 1,
+					message.indexOf("_"));
 			transmitterInfo = message.substring(message.indexOf("_") + 1);
+			v.setTitle("Receiver");
 			v.sendLocalVideo(transmitterInfo);
 			v.receiveRemoteVideo(receiverInfo);
 			return true;
 		case "(RejectVideoChat)":
 			v.close();
+
 			return true;
 		}
+		
 		
 		return false;
 	}
@@ -263,21 +272,32 @@ class Listener extends Frame implements Runnable
 		
 		printText(r, " \u2027 ");
 		int begin = offset3+1;
-		int end = offset3+1;		
-		IconInfo getIcon = getIconPos(s, begin);
-		while (getIcon != null){					
-			end = getIcon.pos;
-			String cut = "";
-			cut = s.substring(begin, end);
-			printText(r, cut);
-			printIcon(r, getIcon.name);
-			begin = end+7;
-			if (begin >= s.length())
-				break;
-			getIcon = getIconPos(s, begin);
+		int end = offset3+1;
+		String pureText = s.substring(begin);
+		if (pureText.indexOf("www.youtube.com") != -1 && pureText.indexOf("?v=") != -1){
+			int v = pureText.indexOf("?v=")+3;			
+			printText(r, "\n");
+			//cwc.tabs.get(r).addYouTube("google.com");
+			cwc.tabs.get(r).addYouTube("www.youtube.com/embed/"+pureText.substring(v));
+			System.out.println("youtube!");
+			printText(r, "\n");	
 		}
-		String last = s.substring(begin) + "\n";
-		printText(r, last);
+		else{				
+			IconInfo getIcon = getIconPos(s, begin);
+			while (getIcon != null){					
+				end = getIcon.pos;
+				String cut = "";
+				cut = s.substring(begin, end);
+				printText(r, cut);
+				printIcon(r, getIcon.name);
+				begin = end+7;
+				if (begin >= s.length())
+					break;
+				getIcon = getIconPos(s, begin);
+			}
+			String last = s.substring(begin)+"\n";
+			printText(r, last);
+		}
 	}
 	
 	private IconInfo getIconPos(String s, int b) {

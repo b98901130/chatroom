@@ -62,7 +62,7 @@ public class ChatWindowClient {
 		frmLabChatroom = new JFrame();
 		frmLabChatroom.setResizable(false);
 		frmLabChatroom.setTitle("Lab1 Chatroom");
-		frmLabChatroom.setBounds(100, 100, 929, 658);
+		frmLabChatroom.setBounds(100, 100, 1022, 657);
 		frmLabChatroom.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		
 		tabs.put(0, new ChatTabClient(this, 0));		

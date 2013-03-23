@@ -25,12 +25,12 @@ import uk.co.caprica.vlcj.test.VlcjTest;
 public class VideoChat {
 	public ChatWindowClient cwc;
 	
-	// µø°T³B²z¬ÛÃöÅÜ¼Æ
+	// ÂµÃ¸Â°TÂ³BÂ²zÂ¬Ã›ÃƒÃ¶Ã…ÃœÂ¼Ã†
 	private MediaPlayerFactory mediaPlayerFactory;
 	private EmbeddedMediaPlayer localMediaPlayer;
 	private EmbeddedMediaPlayer remoteMediaPlayer;
 	private String mrl = "dshow://";
-	// µøµ¡¬ÛÃöÅÜ¼Æ
+	// ÂµÃ¸ÂµÂ¡Â¬Ã›ÃƒÃ¶Ã…ÃœÂ¼Ã†
 	private JFrame frame;
 	private JPanel contentPane;
 	private JPanel videoPanel;
@@ -48,42 +48,37 @@ public class VideoChat {
 		localMediaPlayer = mediaPlayerFactory.newEmbeddedMediaPlayer();
 		remoteMediaPlayer = mediaPlayerFactory.newEmbeddedMediaPlayer();
 
-		contentPane = new JPanel();
-
-		videoPanel = new JPanel();
-		videoPanel.setLayout(new GridLayout(1, 2));
-		
-		//localºİµøµ¡
+		//localÂºÃÂµÃ¸ÂµÂ¡
 		localCanvas = new Canvas();
 		localCanvas.setBackground(Color.black);
-		localCanvas.setSize(320, 180);
+		localCanvas.setSize(300, 225);
 		localVideoSurface = mediaPlayerFactory.newVideoSurface(localCanvas);
 	    localMediaPlayer.setVideoSurface(localVideoSurface);
 	    localPanel = new JPanel();
-	    localPanel.setBorder(new TitledBorder("Local"));
-	    localPanel.setLayout(new BorderLayout(0, 8));
-	    localPanel.add(localCanvas, BorderLayout.CENTER);
+	    localPanel.setLayout(null);
+	    localPanel.add(localCanvas);
+	    localPanel.setBounds(480, 355, 300, 225);
 	    
-	    //¹ï¤èµøµ¡
+	    //Â¹Ã¯Â¤Ã¨ÂµÃ¸ÂµÂ¡
 	    remoteCanvas = new Canvas();
 	    remoteCanvas.setBackground(Color.black);
-	    remoteCanvas.setSize(320, 180);
+	    remoteCanvas.setSize(780, 580);
 	    remoteVideoSurface = mediaPlayerFactory.newVideoSurface(remoteCanvas);
 	    remoteMediaPlayer.setVideoSurface(remoteVideoSurface);
 	    remotePanel = new JPanel();
-	    remotePanel.setBorder(new TitledBorder("Remote"));
-	    remotePanel.setLayout(new BorderLayout(0, 8));
-	    remotePanel.add(remoteCanvas, BorderLayout.CENTER);
+	    remotePanel.setLayout(null);
+	    remotePanel.add(remoteCanvas);
+	    remotePanel.setBounds(0, 0, 790, 600);
 	    
-	    videoPanel.add(localPanel);
-	    videoPanel.add(remotePanel);
+	    contentPane = new JPanel();
+	    contentPane.setLayout(null);
+	    contentPane.add(localPanel);
+	    contentPane.add(remotePanel);
 	    
-	    contentPane.add(videoPanel, BorderLayout.CENTER);
-	    
-	    //·s¼Wµøµ¡
+	    //Â·sÂ¼WÂµÃ¸ÂµÂ¡
 	    frame = new JFrame();
 	    frame.setContentPane(contentPane);
-	    frame.setSize(700, 260);
+	    frame.setSize(800, 600);
 	    frame.setVisible(true);
 	}
 	
@@ -94,15 +89,17 @@ public class VideoChat {
 	
 	public void close()
 	{
+		localMediaPlayer.release();
+		remoteMediaPlayer.release();
 		System.exit(0);
 	}
 	
-	//°e¥X¡]VideoChatRequest¡^receiver_transmitter
+	//Â°eÂ¥XÂ¡]VideoChatRequestÂ¡^receiver_transmitter
 	public void askForVideoChat(String receiverName, String transmitterName)
 	{
 		try {		
 			cwc.listener.out.writeUTF("(VideoChatRequest)" + receiverName + "_" + transmitterName);
-			JOptionPane.showMessageDialog(frame, "µ¥«İ "+receiverName+" ±µ¨üÁÜ¬ù...", "SkypeLog",JOptionPane.PLAIN_MESSAGE);
+			JOptionPane.showMessageDialog(frame, "ÂµÂ¥Â«Ã "+receiverName+" Â±ÂµÂ¨Ã¼ÃÃœÂ¬Ã¹...", "SkypeLog",JOptionPane.PLAIN_MESSAGE);
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -134,7 +131,7 @@ public class VideoChat {
 		remoteMediaPlayer.playMedia("rtp://" + remoteInfo);
 	}
 	
-	private static String formatRtpStream(String serverAddress, int serverPort) {
+	public static String formatRtpStream(String serverAddress, int serverPort) {
 	    StringBuilder sb = new StringBuilder(60);
 	    sb.append(":sout=#transcode{vcodec=mp4v,vb=2048,scale=1,acodec=mpga,ab=128,channels=2,samplerate=44100}:duplicate{dst=display,dst=rtp{dst=");
 	    sb.append(serverAddress);
@@ -143,4 +140,5 @@ public class VideoChat {
 	    sb.append(",mux=ts, ttl=10}}");
 	    return sb.toString();
 	  }
+
 }

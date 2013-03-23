@@ -8,9 +8,10 @@
 	<classpathentry kind="lib" path="lib/vlcj-2.2.0-tests.jar"/>
 	<classpathentry kind="lib" path="lib/vlcj-2.2.0.jar"/>
 	<classpathentry kind="lib" path="lib/json-simple-1.1.1.jar"/>
-	<classpathentry kind="lib" path="lib/smack.jar"/>
+	<classpathentry kind="con" path="at.bestsolution.efxclipse.tooling.jdt.core.JAVAFX_CONTAINER"/>
 	<classpathentry kind="lib" path="lib/DJNativeSwing-SWT.jar"/>
 	<classpathentry kind="lib" path="lib/DJNativeSwing.jar"/>
+	<classpathentry kind="lib" path="lib/smack.jar"/>
 	<classpathentry kind="lib" path="lib/swt.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

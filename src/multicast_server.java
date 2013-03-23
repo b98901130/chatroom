@@ -291,8 +291,8 @@ class ServerThread implements Runnable
 			out.writeUTF("(VideoChatRequest)" + transmitterName);
 			return true;
 		case "(ReceiveVideoChat)":
-			receiverName = msg.substring(msg.indexOf(")") + 1, msg.indexOf("_"));
-			transmitterName = msg.substring(msg.indexOf("_") + 1);
+			transmitterName = msg.substring(msg.indexOf(")") + 1, msg.indexOf("_"));
+			receiverName = msg.substring(msg.indexOf("_") + 1);
 			synchronized (master.ht_user) {
 				out = new DataOutputStream(master.ht_user.get(transmitterName).getSocket().getOutputStream());
 			}

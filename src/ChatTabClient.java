@@ -447,7 +447,7 @@ public class ChatTabClient extends JPanel {
 		textUsername.setColumns(10);
 		tabPanel.add(textUsername);
 		
-		textChat.setBounds(172, 562, 724, 25);				
+		textChat.setBounds(172, 562, 822, 25);				
 		textChat.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {			
 				try	{
@@ -470,7 +470,7 @@ public class ChatTabClient extends JPanel {
 
 		textPane.setEditable(false);
 	    textScroll.setBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null));
-	    textScroll.setBounds(172, 10, 724, 501);
+	    textScroll.setBounds(172, 10, 822, 496);
 	    tabPanel.add(textScroll);
 	    textScroll.setViewportView(textPane);	    	
 	    

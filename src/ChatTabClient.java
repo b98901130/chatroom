@@ -468,21 +468,18 @@ public class ChatTabClient extends JPanel {
 			textUsername.requestFocus();
 		}
 
-		textPane.setBounds(172, 10, 731, 505);
 		textPane.setEditable(false);
 	    textScroll.setBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null));
 	    textScroll.setBounds(172, 10, 822, 496);
 	    tabPanel.add(textScroll);
 	    textScroll.setViewportView(textPane);	    	
 	    
-	    selfProfilePic.setForeground(Color.WHITE);
 	    selfProfilePic.setBackground(Color.WHITE);
 	    selfProfilePic.setBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null));
 	    selfProfilePic.setBounds(11, 361, 150, 150);
 	    tabPanel.add(selfProfilePic);
 
 	    friendProfilePic.setVisible(false);
-	    friendProfilePic.setForeground(Color.WHITE);
 	    friendProfilePic.setBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null));
 	    friendProfilePic.setBackground(Color.WHITE);
 	    friendProfilePic.setBounds(11, 10, 150, 150);

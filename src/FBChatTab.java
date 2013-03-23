@@ -38,6 +38,8 @@ public class FBChatTab extends JPanel {
 	public DefaultListModel<String> userList = new DefaultListModel<String>();
 	public JList<String> userListUI = new JList<String>(userList);
 	public JLabel label = new JLabel("\u597d\u53cb\u5217\u8868");
+	
+	public JPanel userInfoPanel = new JPanel();
 
 	public StyleContext sc = new StyleContext();
 	Style defaultStyle = sc.getStyle(StyleContext.DEFAULT_STYLE);
@@ -69,6 +71,19 @@ public class FBChatTab extends JPanel {
 		textPane.addStyle("FriendName", boldGrayStyle);
 		textPane.setBorder(null);
 		
+		userInfoPanel.setBounds(172, 10, 724, 120);
+		userInfoPanel.setBackground(Color.LIGHT_GRAY);
+		userInfoPanel.setOpaque(true);
+		userInfoPanel.setVisible(false);
+		userInfoPanel.setBounds(172, 10, 724, 120);
+		userInfoPanel.setBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null));
+		JLabel profilePicLabel = new JLabel("");
+		profilePicLabel.setBackground(Color.WHITE);
+	    profilePicLabel.setBorder(new EtchedBorder(EtchedBorder.RAISED, null, null));
+	    profilePicLabel.setBounds(10, 10, 100, 100);
+	    userInfoPanel.add(profilePicLabel);
+	    tabPanel.add(userInfoPanel);
+		
 		label.setBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null));
 		label.setBounds(11, 10, 150, 25);
 		label.setHorizontalAlignment(SwingConstants.CENTER);
@@ -77,12 +92,13 @@ public class FBChatTab extends JPanel {
 		btnLeavePage.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {		
 				cwc.tabbedPane.remove(tabPanel);
+				tabPanel.setName(null);
 			}
 		});
 		btnLeavePage.setBounds(74, 546, 87, 25);
 		tabPanel.add(btnLeavePage);
 		
-		textChat.setBounds(172, 546, 724, 25);				
+		textChat.setBounds(172, 546, 822, 25);				
 		textChat.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {			
 				textChat.setText(null);				
@@ -91,10 +107,9 @@ public class FBChatTab extends JPanel {
 		tabPanel.add(textChat);
 	    textChat.requestFocus();
 		
-		textPane.setBounds(172, 10, 731, 505);
 		textPane.setEditable(false);
 	    textScroll.setBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null));
-	    textScroll.setBounds(172, 10, 724, 526);
+	    textScroll.setBounds(172, 10, 822, 526);
 	    tabPanel.add(textScroll);
 	    textScroll.setViewportView(textPane);	    	
 	    
@@ -121,7 +136,7 @@ public class FBChatTab extends JPanel {
 	    tabPanel.add(fb_label);
 	    
 	    JLabel lblfacebook = new JLabel("\u2190 \u767B\u5165Facebook");
-	    lblfacebook.setBounds(64, 579, 107, 15);
+	    lblfacebook.setBounds(64, 579, 150, 15);
 	    tabPanel.add(lblfacebook);
 	    
 	    JScrollPane scrollPane = new JScrollPane();

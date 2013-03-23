@@ -98,7 +98,7 @@ public class FBChatTab extends JPanel {
 		btnLeavePage.setBounds(74, 546, 87, 25);
 		tabPanel.add(btnLeavePage);
 		
-		textChat.setBounds(172, 546, 724, 25);				
+		textChat.setBounds(172, 546, 822, 25);				
 		textChat.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {			
 				textChat.setText(null);				
@@ -107,10 +107,9 @@ public class FBChatTab extends JPanel {
 		tabPanel.add(textChat);
 	    textChat.requestFocus();
 		
-		//textPane.setBounds(172, 10, 731, 505);
 		textPane.setEditable(false);
 	    textScroll.setBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null));
-	    textScroll.setBounds(172, 10, 724, 526);
+	    textScroll.setBounds(172, 10, 822, 526);
 	    tabPanel.add(textScroll);
 	    textScroll.setViewportView(textPane);	    	
 	    

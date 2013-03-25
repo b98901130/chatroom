@@ -430,13 +430,6 @@ class Listener extends Frame implements Runnable
 	}
 	
 	private String getRobotText(String message) throws IOException {
-		// add random delay
-		try {
-			Thread.sleep((int)(1500 * Math.random() + 1200));
-		} catch (InterruptedException e) {
-			e.printStackTrace();
-		}
-		
 		String url = "http://sandbox.api.simsimi.com/request.p?key=4636d53c-f01f-469e-86d3-74d0a19c26d8&lc=zh&ft=1.0&text=" + URLEncoder.encode(message, "UTF-8");
 		BufferedReader in = new BufferedReader(new InputStreamReader(new URL(url).openStream(), "UTF-8"));
 		String json_result = in.readLine();
@@ -446,6 +439,12 @@ class Listener extends Frame implements Runnable
 			return (String)json_obj.get("response");
 		else {
 			// if API daily limit exceeded
+			try {
+				Thread.sleep((int)(1500 * Math.random() + 1200)); // add random delay
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
+			
 			Random rand = new Random();
 			String[] randomText = {"", "嗯嗯", "呵呵", "哈哈", "喔喔", "?", "恩恩", "", "ㄏㄏ", "蛤"};
 			String[] randomFace = {"", "^^", "><", ":目", "?", "~", "XD", "QQ"};

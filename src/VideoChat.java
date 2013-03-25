@@ -1,26 +1,14 @@
-import java.awt.BorderLayout;
 import java.awt.Canvas;
 import java.awt.Color;
-import java.awt.GridLayout;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.io.IOException;
 
-import javax.swing.Box;
-import javax.swing.BoxLayout;
-import javax.swing.ImageIcon;
-import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
-import javax.swing.border.EmptyBorder;
-import javax.swing.border.TitledBorder;
 
 import uk.co.caprica.vlcj.player.MediaPlayerFactory;
 import uk.co.caprica.vlcj.player.embedded.EmbeddedMediaPlayer;
 import uk.co.caprica.vlcj.player.embedded.videosurface.CanvasVideoSurface;
-import uk.co.caprica.vlcj.runtime.RuntimeUtil;
-import uk.co.caprica.vlcj.test.VlcjTest;
 
 public class VideoChat {
 	public ChatWindowClient cwc;
@@ -33,7 +21,6 @@ public class VideoChat {
 	// µøµ¡¬ÛÃöÅÜ¼Æ
 	private JFrame frame;
 	private JPanel contentPane;
-	private JPanel videoPanel;
 	private JPanel localPanel;
 	private JPanel remotePanel;
 	private Canvas localCanvas;

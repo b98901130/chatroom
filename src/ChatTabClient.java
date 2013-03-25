@@ -17,8 +17,6 @@ import javafx.scene.control.TextField;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
-import javafx.scene.text.Font;
-import javafx.scene.text.Text;
 import javafx.scene.web.WebEngine;
 import javafx.scene.web.WebView;
 
@@ -375,8 +373,6 @@ public class ChatTabClient extends JPanel {
 				if (cwc.listener == null || !cwc.listener.isConnected() || userListUI.isSelectionEmpty()) return;
 				String receiver = userListUI.getSelectedValue();
 				if (cwc.username.equals(receiver)) return;
-				
-				// TODO
 				askForVideoChat(receiver, cwc.username);
 			}			
 		});
@@ -385,7 +381,7 @@ public class ChatTabClient extends JPanel {
 		
 		btnBonus.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
-				EditHTML e = new EditHTML(); 
+				new EditHTML(); 
 			}			
 		});
 		btnBonus.setBounds(905, 525, 90, 23);
@@ -470,7 +466,7 @@ public class ChatTabClient extends JPanel {
 
 		textPane.setEditable(false);
 	    textScroll.setBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null));
-	    textScroll.setBounds(172, 10, 822, 496);
+	    textScroll.setBounds(172, 10, 822, 501);
 	    tabPanel.add(textScroll);
 	    textScroll.setViewportView(textPane);	    	
 	    
@@ -577,7 +573,6 @@ public class ChatTabClient extends JPanel {
 		EventHandler<javafx.event.ActionEvent> goAction = new EventHandler<javafx.event.ActionEvent>() {
 			@Override
 			public void handle(javafx.event.ActionEvent event) {
-				// TODO Auto-generated method stub
 				webEngine.load(locationField.getText().startsWith("http://")
 						? locationField.getText()
 						: "http://" + locationField.getText());

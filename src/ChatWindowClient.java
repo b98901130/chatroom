@@ -15,6 +15,8 @@ import javax.swing.BoxLayout;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
+import org.jivesoftware.smack.XMPPException;
+
 import chrriis.dj.nativeswing.swtimpl.NativeInterface;
 import chrriis.dj.nativeswing.swtimpl.components.JWebBrowser;
 import chrriis.dj.nativeswing.swtimpl.components.WebBrowserCommandEvent;
@@ -34,9 +36,9 @@ public class ChatWindowClient {
 	public String username;
 	public String server_ip;
 	public ImageIcon userIcon;
-	public JFrame browserFrame = new JFrame("Facebook Login");
-	public JPanel webBrowserPanel = new JPanel(new BorderLayout());
-	public JWebBrowser webBrowser = new JWebBrowser();
+	public JFrame browserFrame;
+	public JPanel webBrowserPanel;
+	public JWebBrowser webBrowser;
 	public FBChatTab fbTab = new FBChatTab(this);
 	public FBChatClient fbClient = new FBChatClient(fbTab);
 	
@@ -44,7 +46,7 @@ public class ChatWindowClient {
 	 * Launch the application.
 	 */
 	public static void main(String[] args) {
-		NativeInterface.open();
+		NativeInterface.initialize();
 		EventQueue.invokeLater(new Runnable() {
 			public void run() {
 				ChatWindowClient window = new ChatWindowClient();
@@ -83,11 +85,19 @@ public class ChatWindowClient {
 			}
 		};
 		tabbedPane.addChangeListener(new myChangeListener(this));
+		
+		initFbBrowser();
 	    
 		while (server_ip == null) 
 			server_ip = (String)JOptionPane.showInputDialog(frmLabChatroom, "Server IP:", "Lab1 Chatroom", JOptionPane.QUESTION_MESSAGE, null, null, "127.0.0.1");
-
-		// initialize web browser for FB login
+	}
+	
+	// initialize web browser for FB login
+	public void initFbBrowser() {
+		browserFrame = new JFrame("Facebook Login");
+		webBrowserPanel = new JPanel(new BorderLayout());
+		webBrowser = new JWebBrowser();
+		
 		browserFrame.setVisible(false);
 		browserFrame.getContentPane().add(webBrowserPanel, BorderLayout.CENTER);
 		browserFrame.setSize(450, 350);
@@ -101,8 +111,25 @@ public class ChatWindowClient {
 				String pageUrl = event.getWebBrowser().getResourceLocation();
 				if (pageUrl.startsWith("https://www.facebook.com/connect/login_success.html")) {
 					browserFrame.setVisible(false);
-					if (pageUrl.indexOf("error_reason") < 0)
+					if (pageUrl.indexOf("error_reason") < 0) {
 						fbClient.setAccessToken(pageUrl.substring(pageUrl.indexOf("access_token=") + 13, pageUrl.indexOf("&expires_in")));
+						try {
+							fbClient.connect();
+						} catch (XMPPException e) {
+							fbClient.clear();
+							System.out.println("XMPPException caught: " + e);
+							JOptionPane.showMessageDialog(frmLabChatroom, "\u4f3a\u670d\u5668\u9023\u7dda\u5931\u6557\uff01", "Error", JOptionPane.ERROR_MESSAGE);
+							return;
+						}
+						fbTab.printSystemMsg("<\u7cfb\u7d71\u8a0a\u606f> \u5df2\u9023\u7dda\u81f3Facebook!\n");
+						fbClient.setUserName();
+						fbTab.lblfacebook.setVisible(false);
+						fbTab.fb_label.setVisible(false);
+						fbTab.profilePicLabel.setVisible(true);
+						fbTab.usernameLabel.setVisible(true);
+					}
+					else
+						webBrowser.navigate("about:blank");
 				}
 			}
 			public void commandReceived(WebBrowserCommandEvent event) {}

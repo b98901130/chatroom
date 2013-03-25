@@ -1,6 +1,7 @@
 import java.awt.FileDialog;
 import java.io.BufferedOutputStream;
 import java.io.DataInputStream;
+import java.io.DataOutputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.net.ServerSocket;
@@ -36,6 +37,8 @@ public class Receiver implements Runnable {
 			// after server->receiver: (FileRequest)
 			Socket socket = servsock.accept();
 			DataInputStream inStream = new DataInputStream(socket.getInputStream());
+			DataOutputStream outStream = new DataOutputStream(socket.getOutputStream());
+			outStream.flush();
 			
 			// after connection is opened, transmitter should then send "(FileInfo)filename%fileSize" to receiver
 			String fileInfo = inStream.readUTF();
@@ -53,6 +56,9 @@ public class Receiver implements Runnable {
 					                                     transmitter + " \u50b3\u9001\u6a94\u6848 [" + fileName + "] \u7d66\u4f60\n\u662f\u5426\u63a5\u53d7\u795d\u798f\uff1f(y/n)",
 					                                     "Invitation", JOptionPane.YES_NO_OPTION);
 			if (decision == JOptionPane.YES_OPTION) {
+				outStream.writeUTF("(FileACK)");
+				outStream.flush();
+				
 				fileDialog.setVisible(true); // choose file location via fileDialog
 				filePath = fileDialog.getDirectory();
 				fileName = fileDialog.getFile();

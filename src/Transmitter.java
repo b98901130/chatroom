@@ -1,5 +1,6 @@
 import java.awt.FileDialog;
 import java.io.BufferedInputStream;
+import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
@@ -31,6 +32,7 @@ public class Transmitter implements Runnable {
 		String filePath = "", fileName = "";
 		
 		try {
+			DataInputStream inStream = new DataInputStream(socket.getInputStream());
 			DataOutputStream outStream = new DataOutputStream(socket.getOutputStream());
 			outStream.flush();
 
@@ -46,6 +48,9 @@ public class Transmitter implements Runnable {
 				String fileInfo = "(FileInfo)" + fileName + "%" + fileSize;
 				outStream.writeUTF(fileInfo);
 				outStream.flush();
+				
+				// wait for ACK
+				inStream.readUTF();
 
 				// transmitter->receiver: file content
 				transmitFile(filePath + fileName, fileSize, outStream);

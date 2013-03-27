@@ -20,6 +20,7 @@ public class FBChatClient implements Runnable {
 	final FBChatTab tab;
 	Hashtable<String, FBUser> onlineList = new Hashtable<String, FBUser>();
 	Hashtable<String, FBUser> offlineList = new Hashtable<String, FBUser>();
+	Hashtable<String, MyMessageListener> listenerTable = new Hashtable<String, MyMessageListener>();
 	Roster roster;
 	RosterListener rosterListener = new RosterListener() {
 	    public void entriesAdded(Collection<String> addresses) {}
@@ -96,9 +97,16 @@ public class FBChatClient implements Runnable {
 				new ChatManagerListener() {
 					@Override
 					public void chatCreated(Chat chat, boolean createdLocally) {
-						chat.addMessageListener(new myMessageListener(myself));
+						String jid = chat.getParticipant();
+						if (listenerTable.containsKey(jid))
+							chat.addMessageListener(listenerTable.get(jid));
+						else {
+							MyMessageListener listener = new MyMessageListener(myself);
+							chat.addMessageListener(listener);
+							listenerTable.put(jid, listener);
+						}
 						conversation = chat;
-						String name = getName(chat.getParticipant());
+						String name = getName(jid);
 						tab.clearText();
 						tab.printSystemMsg("<\u7cfb\u7d71\u8a0a\u606f> \u5df2\u958b\u555f\u8207" + name + "\u7684\u5c0d\u8a71\u3002\n");
 		        	    tab.textChat.setEditable(true);
@@ -131,7 +139,13 @@ public class FBChatClient implements Runnable {
 	}
 	
 	public void openConversation(String jid) {
-		conversation = chatmanager.createChat(jid, new myMessageListener(myself));
+		if (listenerTable.containsKey(jid))
+			conversation = chatmanager.createChat(jid, listenerTable.get(jid));
+		else {
+			MyMessageListener listener = new MyMessageListener(myself);
+			conversation = chatmanager.createChat(jid, listener);
+			listenerTable.put(jid, listener);
+		}
 	}
 	public Chat getConversation() { return conversation; }
 	
@@ -163,10 +177,10 @@ class FBUser implements Comparable<Object> {
 	}
 }
 
-class myMessageListener implements MessageListener {
+class MyMessageListener implements MessageListener {
 	private FBChatClient master;
 	
-	public myMessageListener(FBChatClient m) {
+	public MyMessageListener(FBChatClient m) {
 		this.master = m;
 	}
 	

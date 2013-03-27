@@ -98,13 +98,17 @@ public class FBChatClient implements Runnable {
 					@Override
 					public void chatCreated(Chat chat, boolean createdLocally) {
 						String jid = chat.getParticipant();
-						if (listenerTable.containsKey(jid))
-							chat.addMessageListener(listenerTable.get(jid));
-						else {
-							MyMessageListener listener = new MyMessageListener(myself);
-							chat.addMessageListener(listener);
-							listenerTable.put(jid, listener);
+						
+						if (!createdLocally) {
+							if (listenerTable.containsKey(jid))
+								chat.addMessageListener(listenerTable.get(jid));
+							else {
+								MyMessageListener listener = new MyMessageListener(myself);
+								chat.addMessageListener(listener);
+								listenerTable.put(jid, listener);
+							}
 						}
+						
 						conversation = chat;
 						String name = getName(jid);
 						tab.clearText();
@@ -185,6 +189,7 @@ class MyMessageListener implements MessageListener {
 	}
 	
 	public void processMessage(Chat chat, Message message) {
+		System.out.println("Get FBmsg: " + message.getBody());
 		String id = chat.getParticipant(), name = master.getName(id);
 		if (message.getBody() != null)
 			master.tab.printText(message.getBody(), name);

@@ -56,9 +56,6 @@ public class Receiver implements Runnable {
 					                                     transmitter + " \u50b3\u9001\u6a94\u6848 [" + fileName + "] \u7d66\u4f60\n\u662f\u5426\u63a5\u53d7\u795d\u798f\uff1f(y/n)",
 					                                     "Invitation", JOptionPane.YES_NO_OPTION);
 			if (decision == JOptionPane.YES_OPTION) {
-				outStream.writeUTF("(FileACK)");
-				outStream.flush();
-				
 				fileDialog.setVisible(true); // choose file location via fileDialog
 				filePath = fileDialog.getDirectory();
 				fileName = fileDialog.getFile();
@@ -67,6 +64,8 @@ public class Receiver implements Runnable {
 					listener.printText(listener.cwc.getRoomIdOnFocus(), "<\u7cfb\u7d71\u8a0a\u606f> \u5df2\u62d2\u7d55\u6a94\u6848\u3002\n", "SystemMessage");
 				}
 				else {
+					outStream.writeUTF("(FileACK)");
+					outStream.flush();
 					receiveFile(filePath + fileName, fileSize, inStream); // start listening for file content
 					listener.printText(listener.cwc.getRoomIdOnFocus(), "<\u7cfb\u7d71\u8a0a\u606f> \u5df2\u6536\u5230\u6a94\u6848 [" + filePath + fileName + "]\n", "SystemMessage");
 				}

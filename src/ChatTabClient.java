@@ -20,6 +20,7 @@ import javafx.scene.layout.VBox;
 import javafx.scene.web.WebEngine;
 import javafx.scene.web.WebView;
 
+import javax.swing.JFrame;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.DefaultListModel;
@@ -437,13 +438,25 @@ public class ChatTabClient extends JPanel {
 		btnInvitation.setVisible(false);
 		tabPanel.add(btnInvitation);
 		
+		JButton btnVibrate = new JButton("");
+		btnVibrate.setToolTipText("Vibrate!");
+		btnVibrate.setBackground(Color.WHITE);
+		btnVibrate.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent arg0) {
+				cwc.listener.sendVibration(room_id);
+			}
+		});
+		btnVibrate.setBounds(969, 563, 23, 22);
+		btnVibrate.setIcon(new ImageIcon("images/vibration.png"));
+		tabPanel.add(btnVibrate);
+		
 		textUsername = new JTextField();
 		textUsername.setToolTipText("Please enter username");
 		textUsername.setBounds(10, 562, 150, 25);
 		textUsername.setColumns(10);
 		tabPanel.add(textUsername);
 		
-		textChat.setBounds(172, 562, 822, 25);				
+		textChat.setBounds(172, 562, 794, 25);				
 		textChat.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {			
 				try	{
@@ -498,7 +511,7 @@ public class ChatTabClient extends JPanel {
 	    scrollPane.setViewportView(userListUI);
 	}
 	
-	public void addYouTube(final String s){
+	public void addYouTube(final String s){		
 		JScrollPane scrollPane = new JScrollPane();
         JPanel p = new JPanel();
         scrollPane.setViewportView(p);
@@ -519,6 +532,26 @@ public class ChatTabClient extends JPanel {
             }
         });     
 		scrollPane.setSize(200, 200);
+	}
+	
+	public void vibrate() {
+		try {
+			final JFrame frame = cwc.frmLabChatroom;
+			final int originalX = frame.getLocationOnScreen().x;
+			final int originalY = frame.getLocationOnScreen().y;
+			for (int i = 0; i < 10; i++) {
+				Thread.sleep(10);
+				frame.setLocation(originalX, originalY + 10);
+				Thread.sleep(10);
+				frame.setLocation(originalX, originalY - 10);
+				Thread.sleep(10);
+				frame.setLocation(originalX + 10, originalY);
+				Thread.sleep(10);
+				frame.setLocation(originalX, originalY);
+			}
+		} catch (Exception err) {
+			err.printStackTrace();
+		}
 	}
 	
 	public MouseAdapter emoMouseListener(final String s) {

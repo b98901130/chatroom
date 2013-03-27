@@ -14,6 +14,7 @@ import javax.swing.ImageIcon;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JTextPane;
+import javax.swing.plaf.basic.BasicTabbedPaneUI.TabSelectionHandler;
 
 import org.json.simple.*;
 
@@ -237,8 +238,12 @@ class Listener extends Frame implements Runnable
 			v.receiveRemoteVideo(receiverInfo);
 			return true;
 		case "(RejectVideoChat)":
-			v.close();
-
+			v.close();			
+			return true;
+		case "(ReceiveVibrate)":
+			int r_vibrate = Integer.parseInt(message.substring(message.indexOf(')') + 1));
+			if (cwc.tabs.get(r_vibrate) != null)
+				cwc.tabs.get(r_vibrate).vibrate();
 			return true;
 		}
 		
@@ -280,6 +285,12 @@ class Listener extends Frame implements Runnable
 			//cwc.tabs.get(r).addYouTube("google.com");
 			cwc.tabs.get(r).addYouTube("www.youtube.com/embed/"+pureText.substring(v));
 			System.out.println("youtube!");
+			printText(r, "\n");	
+		}
+		else if (pureText.indexOf("趙式隆好帥") != -1){	
+			printText(r, "\n");
+			//cwc.tabs.get(r).addYouTube("google.com");
+			cwc.tabs.get(r).addYouTube("https://www.google.com.tw/#hl=zh-TW&q=趙式隆");
 			printText(r, "\n");	
 		}
 		else{				
@@ -396,6 +407,14 @@ class Listener extends Frame implements Runnable
 	}
 	
 	public boolean isConnected() { return socket != null; }
+	
+	public void sendVibration(int room_id){
+		try {
+			out.writeUTF("(sendVibrate)" + room_id);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
 	
 	public void sendInvitation(int room_id, String username) {
 		try {

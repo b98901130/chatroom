@@ -313,10 +313,20 @@ class ServerThread implements Runnable
 				out = new DataOutputStream(master.ht_user.get(transmitterName).getSocket().getOutputStream());
 			}
 			out.writeUTF("(RejectVideoChat)");
+			return true;		
+		case "(sendVibrate)":
+			int r_vibrate = Integer.parseInt(msg.substring(msg.indexOf(")") + 1));
+			out = new DataOutputStream(userdata.getSocket().getOutputStream());
+			out.writeUTF("(ReceiveVibrate)"+r_vibrate);
+			synchronized (master.ht_rooms) {
+				ht_room = master.ht_rooms.get(r_vibrate);
+			}
+			synchronized (ht_room) {		
+				for (Enumeration<DataOutputStream> e = ht_room.elements(); e.hasMoreElements();)
+					e.nextElement().writeUTF("(ReceiveVibrate)" + r_vibrate);
+			}
 			return true;
 		}
-		
-		
 		return false;
 	}
 	

@@ -84,6 +84,10 @@ public class Receiver implements Runnable {
 	    BufferedOutputStream bos = new BufferedOutputStream(fos);
 		int bytesRead = inputStream.read(fileContent);
 		
+		while (bytesRead == 0) {
+			bytesRead = inputStream.read(fileContent);
+		}
+		
 		while (bytesRead >= 0) {
 			bos.write(fileContent, 0, bytesRead);
 			if (bytesRead < 1024) {

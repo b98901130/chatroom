@@ -9,6 +9,7 @@ import javax.swing.JPanel;
 import uk.co.caprica.vlcj.player.MediaPlayerFactory;
 import uk.co.caprica.vlcj.player.embedded.EmbeddedMediaPlayer;
 import uk.co.caprica.vlcj.player.embedded.videosurface.CanvasVideoSurface;
+import uk.co.caprica.vlcj.runtime.RuntimeUtil;
 
 public class VideoChat {
 	public ChatWindowClient cwc;
@@ -17,7 +18,7 @@ public class VideoChat {
 	private MediaPlayerFactory mediaPlayerFactory;
 	private EmbeddedMediaPlayer localMediaPlayer;
 	private EmbeddedMediaPlayer remoteMediaPlayer;
-	private String mrl = "dshow://";
+	String mrl = !RuntimeUtil.isWindows() ? "v4l2:///dev/video0" : "dshow://";
 	// µøµ¡¬ÛÃöÅÜ¼Æ
 	private JFrame frame;
 	private JPanel contentPane;
@@ -76,8 +77,13 @@ public class VideoChat {
 	
 	public void close()
 	{
+		localMediaPlayer.stop();
 		localMediaPlayer.release();
+		remoteMediaPlayer.stop();
 		remoteMediaPlayer.release();
+		localMediaPlayer = null;
+		remoteMediaPlayer = null;
+		mrl = "";
 		System.exit(0);
 	}
 	
